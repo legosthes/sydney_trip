@@ -42,6 +42,7 @@ interface PlaceForm {
   website: string;
   category: string;
   day_labels: string;
+  image_url: string;
 }
 
 const emptyForm: PlaceForm = {
@@ -51,6 +52,7 @@ const emptyForm: PlaceForm = {
   website: "",
   category: "Restaurant",
   day_labels: "",
+  image_url: "",
 };
 
 export function MyPlaces() {
@@ -92,6 +94,7 @@ export function MyPlaces() {
       website: p.website || "",
       category: p.category || "Restaurant",
       day_labels: p.day_labels || "",
+      image_url: p.image_url || "",
     });
     setDialogOpen(true);
   };
@@ -105,6 +108,7 @@ export function MyPlaces() {
       website: formData.website || null,
       category: formData.category || null,
       day_labels: formData.day_labels || null,
+      image_url: formData.image_url || null,
     };
     if (editingId) {
       const updated = await updatePlace(editingId, payload);
@@ -206,6 +210,10 @@ export function MyPlaces() {
                 <input id="place-web" type="url" placeholder="https://..." value={formData.website} onChange={(e) => setFormData({ ...formData, website: e.target.value })} className="flex h-9 w-full rounded-lg border border-input bg-transparent px-3 py-1 text-sm transition-colors placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring" />
               </div>
               <div className="space-y-1.5">
+                <label htmlFor="place-img" className="text-sm font-medium">{t("places.imageUrl")}</label>
+                <input id="place-img" type="url" placeholder="https://images.unsplash.com/..." value={formData.image_url} onChange={(e) => setFormData({ ...formData, image_url: e.target.value })} className="flex h-9 w-full rounded-lg border border-input bg-transparent px-3 py-1 text-sm transition-colors placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring" />
+              </div>
+              <div className="space-y-1.5">
                 <label htmlFor="place-days" className="text-sm font-medium">{t("places.dayLabels")}</label>
                 <select id="place-days" multiple value={formData.day_labels ? formData.day_labels.split(",") : []} onChange={(e) => { const vals = Array.from(e.target.selectedOptions).map(o => o.value); setFormData({ ...formData, day_labels: vals.join(",") }); }} className="flex w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-ring h-24">
                   {itinerary.map((d) => <option key={d.dayLabel} value={d.dayLabel}>{d.dayLabel} - {d.date}</option>)}
@@ -235,8 +243,12 @@ export function MyPlaces() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((place) => (
             <Card key={place.id} className="border-border/50 shadow-sm overflow-hidden py-0">
-              {/* Google Maps embed */}
-              {place.maps_url && (
+              {/* Image or Map embed */}
+              {place.image_url ? (
+                <div className="aspect-[16/9] w-full overflow-hidden">
+                  <img src={place.image_url} alt={place.name} className="h-full w-full object-cover" />
+                </div>
+              ) : place.maps_url ? (
                 <div className="aspect-[16/9] w-full">
                   <iframe
                     src={`https://maps.google.com/maps?q=${encodeURIComponent(place.name)}&output=embed&z=15`}
@@ -246,7 +258,7 @@ export function MyPlaces() {
                     title={place.name}
                   />
                 </div>
-              )}
+              ) : null}
               <CardContent className="p-4 space-y-3">
                 <div className="flex items-start justify-between gap-2">
                   <div>

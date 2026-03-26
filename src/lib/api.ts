@@ -129,6 +129,18 @@ export interface PlaceRow {
   website: string | null;
   category: string | null;
   day_labels: string | null;
+  image_url: string | null;
+  created_at: string | null;
+}
+
+export type SlotType = 'morning' | 'breakfast' | 'afternoon' | 'lunch' | 'evening' | 'dinner';
+
+export interface ItinerarySlotRow {
+  id: string;
+  day_number: number;
+  slot_type: SlotType;
+  place_id: string;
+  position: number;
   created_at: string | null;
 }
 
@@ -211,4 +223,35 @@ export async function updateChecklistItem(
 
 export async function deleteChecklistItem(id: string): Promise<void> {
   await fetch(`${API_BASE}/checklist/${id}`, { method: "DELETE" });
+}
+
+// ── Itinerary Slots API ──
+
+export async function getAllSlots(): Promise<ItinerarySlotRow[]> {
+  const res = await fetch(`${API_BASE}/itinerary/slots`);
+  return res.json();
+}
+
+export async function getSlotsByDay(dayNumber: number): Promise<ItinerarySlotRow[]> {
+  const res = await fetch(`${API_BASE}/itinerary/slots/${dayNumber}`);
+  return res.json();
+}
+
+export async function addSlot(
+  slot: Omit<ItinerarySlotRow, "id" | "created_at">
+): Promise<ItinerarySlotRow> {
+  const res = await fetch(`${API_BASE}/itinerary/slots`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(slot),
+  });
+  if (res.status === 409) {
+    const err = await res.json();
+    throw new Error(err.detail || "Slot is full");
+  }
+  return res.json();
+}
+
+export async function removeSlot(slotId: string): Promise<void> {
+  await fetch(`${API_BASE}/itinerary/slots/${slotId}`, { method: "DELETE" });
 }

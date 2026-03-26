@@ -91,6 +91,25 @@ def run_migrations():
         )
     """)
 
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS itinerary_slots (
+            id TEXT PRIMARY KEY,
+            day_number INTEGER NOT NULL,
+            slot_type TEXT NOT NULL CHECK (slot_type IN ('morning','breakfast','afternoon','lunch','evening','dinner')),
+            place_id TEXT NOT NULL,
+            position INTEGER NOT NULL DEFAULT 0,
+            created_at TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY (place_id) REFERENCES my_places(id) ON DELETE CASCADE,
+            UNIQUE (day_number, slot_type, place_id)
+        )
+    """)
+
+    # Migration: add image_url to my_places if not present
+    try:
+        cur.execute("ALTER TABLE my_places ADD COLUMN image_url TEXT")
+    except sqlite3.OperationalError:
+        pass  # column already exists
+
     conn.commit()
     conn.close()
 

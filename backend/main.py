@@ -98,9 +98,22 @@ class PlaceCreate(BaseModel):
     website: Optional[str] = None
     category: Optional[str] = None
     day_labels: Optional[str] = None
+    image_url: Optional[str] = None
 
 
 class PlaceOut(PlaceCreate):
+    id: str
+    created_at: Optional[str] = None
+
+
+class SlotCreate(BaseModel):
+    day_number: int
+    slot_type: str
+    place_id: str
+    position: int = 0
+
+
+class SlotOut(SlotCreate):
     id: str
     created_at: Optional[str] = None
 
@@ -239,7 +252,7 @@ def restaurants_by_day(day_label: str):
 def list_places():
     conn = get_conn()
     rows = conn.execute(
-        "SELECT id, name, notes, maps_url, website, category, day_labels, created_at FROM my_places ORDER BY created_at DESC"
+        "SELECT id, name, notes, maps_url, website, category, day_labels, image_url, created_at FROM my_places ORDER BY created_at DESC"
     ).fetchall()
     conn.close()
     return [dict(r) for r in rows]
@@ -249,7 +262,7 @@ def list_places():
 def places_by_day(day_label: str):
     conn = get_conn()
     rows = conn.execute(
-        "SELECT id, name, notes, maps_url, website, category, day_labels, created_at FROM my_places WHERE day_labels LIKE ? ORDER BY created_at DESC",
+        "SELECT id, name, notes, maps_url, website, category, day_labels, image_url, created_at FROM my_places WHERE day_labels LIKE ? ORDER BY created_at DESC",
         (f"%{day_label}%",),
     ).fetchall()
     conn.close()
@@ -261,11 +274,11 @@ def create_place(body: PlaceCreate):
     place_id = str(uuid.uuid4())
     conn = get_conn()
     conn.execute(
-        "INSERT INTO my_places (id, name, notes, maps_url, website, category, day_labels) VALUES (?, ?, ?, ?, ?, ?, ?)",
-        (place_id, body.name, body.notes, body.maps_url, body.website, body.category, body.day_labels),
+        "INSERT INTO my_places (id, name, notes, maps_url, website, category, day_labels, image_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        (place_id, body.name, body.notes, body.maps_url, body.website, body.category, body.day_labels, body.image_url),
     )
     conn.commit()
-    row = conn.execute("SELECT id, name, notes, maps_url, website, category, day_labels, created_at FROM my_places WHERE id = ?", (place_id,)).fetchone()
+    row = conn.execute("SELECT id, name, notes, maps_url, website, category, day_labels, image_url, created_at FROM my_places WHERE id = ?", (place_id,)).fetchone()
     conn.close()
     return dict(row)
 
@@ -274,11 +287,11 @@ def create_place(body: PlaceCreate):
 def update_place(place_id: str, body: PlaceCreate):
     conn = get_conn()
     conn.execute(
-        "UPDATE my_places SET name=?, notes=?, maps_url=?, website=?, category=?, day_labels=? WHERE id=?",
-        (body.name, body.notes, body.maps_url, body.website, body.category, body.day_labels, place_id),
+        "UPDATE my_places SET name=?, notes=?, maps_url=?, website=?, category=?, day_labels=?, image_url=? WHERE id=?",
+        (body.name, body.notes, body.maps_url, body.website, body.category, body.day_labels, body.image_url, place_id),
     )
     conn.commit()
-    row = conn.execute("SELECT id, name, notes, maps_url, website, category, day_labels, created_at FROM my_places WHERE id = ?", (place_id,)).fetchone()
+    row = conn.execute("SELECT id, name, notes, maps_url, website, category, day_labels, image_url, created_at FROM my_places WHERE id = ?", (place_id,)).fetchone()
     conn.close()
     if not row:
         raise HTTPException(404, "Place not found")
@@ -289,6 +302,84 @@ def update_place(place_id: str, body: PlaceCreate):
 def delete_place(place_id: str):
     conn = get_conn()
     conn.execute("DELETE FROM my_places WHERE id = ?", (place_id,))
+    conn.commit()
+    conn.close()
+
+
+# ── Itinerary Slot endpoints ─────────────────────────────
+
+ACTIVITY_SLOTS = {"morning", "afternoon", "evening"}
+MEAL_SLOTS = {"breakfast", "lunch", "dinner"}
+
+
+@app.get("/api/itinerary/slots", response_model=list[SlotOut])
+def list_all_slots():
+    conn = get_conn()
+    rows = conn.execute(
+        "SELECT id, day_number, slot_type, place_id, position, created_at FROM itinerary_slots ORDER BY day_number, position"
+    ).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+@app.get("/api/itinerary/slots/{day_number}", response_model=list[SlotOut])
+def list_slots_by_day(day_number: int):
+    conn = get_conn()
+    rows = conn.execute(
+        "SELECT id, day_number, slot_type, place_id, position, created_at FROM itinerary_slots WHERE day_number = ? ORDER BY position",
+        (day_number,),
+    ).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+@app.post("/api/itinerary/slots", response_model=SlotOut, status_code=201)
+def create_slot(body: SlotCreate):
+    # Validate slot_type
+    all_slots = ACTIVITY_SLOTS | MEAL_SLOTS
+    if body.slot_type not in all_slots:
+        raise HTTPException(400, f"Invalid slot_type: {body.slot_type}")
+
+    conn = get_conn()
+
+    # Check capacity
+    count = conn.execute(
+        "SELECT COUNT(*) FROM itinerary_slots WHERE day_number = ? AND slot_type = ?",
+        (body.day_number, body.slot_type),
+    ).fetchone()[0]
+
+    max_allowed = 1 if body.slot_type in MEAL_SLOTS else 3
+    if count >= max_allowed:
+        conn.close()
+        raise HTTPException(409, f"Slot '{body.slot_type}' is full (max {max_allowed})")
+
+    # Check duplicate
+    existing = conn.execute(
+        "SELECT id FROM itinerary_slots WHERE day_number = ? AND slot_type = ? AND place_id = ?",
+        (body.day_number, body.slot_type, body.place_id),
+    ).fetchone()
+    if existing:
+        conn.close()
+        raise HTTPException(409, "Place already in this slot")
+
+    slot_id = str(uuid.uuid4())
+    conn.execute(
+        "INSERT INTO itinerary_slots (id, day_number, slot_type, place_id, position) VALUES (?, ?, ?, ?, ?)",
+        (slot_id, body.day_number, body.slot_type, body.place_id, body.position),
+    )
+    conn.commit()
+    row = conn.execute(
+        "SELECT id, day_number, slot_type, place_id, position, created_at FROM itinerary_slots WHERE id = ?",
+        (slot_id,),
+    ).fetchone()
+    conn.close()
+    return dict(row)
+
+
+@app.delete("/api/itinerary/slots/{slot_id}", status_code=204)
+def delete_slot(slot_id: str):
+    conn = get_conn()
+    conn.execute("DELETE FROM itinerary_slots WHERE id = ?", (slot_id,))
     conn.commit()
     conn.close()
 

@@ -60,6 +60,19 @@ const translations = {
   "itinerary.viewAll": { en: "View all →", zh: "查看全部 →" },
   "itinerary.mapView": { en: "Day Route", zh: "當日路線" },
   "itinerary.showAll": { en: "Show all stops", zh: "顯示所有站點" },
+  "itinerary.morning": { en: "Morning", zh: "上午" },
+  "itinerary.breakfast": { en: "Breakfast", zh: "早餐" },
+  "itinerary.afternoon": { en: "Afternoon", zh: "下午" },
+  "itinerary.lunch": { en: "Lunch", zh: "午餐" },
+  "itinerary.evening": { en: "Evening", zh: "晚上" },
+  "itinerary.dinner": { en: "Dinner", zh: "晚餐" },
+  "itinerary.addToSlot": { en: "Add place", zh: "新增景點" },
+  "itinerary.removeFromSlot": { en: "Remove", zh: "移除" },
+  "itinerary.pickPlace": { en: "Pick a place", zh: "選擇景點" },
+  "itinerary.slotFull": { en: "Slot is full", zh: "此時段已滿" },
+  "itinerary.searchPlaces": { en: "Search places...", zh: "搜尋景點..." },
+  "itinerary.dragHint": { en: "Drag from sidebar or click + to add", zh: "從側欄拖曳或點擊 + 新增" },
+  "itinerary.allPlaces": { en: "All Saved Places", zh: "所有已儲存景點" },
 
   // My Places
   "places.title": { en: "My Places", zh: "我的景點" },
@@ -79,6 +92,7 @@ const translations = {
   "places.all": { en: "All", zh: "全部" },
   "places.map": { en: "Map", zh: "地圖" },
   "places.noPlaces": { en: "No places saved yet", zh: "尚未儲存景點" },
+  "places.imageUrl": { en: "Image URL (optional)", zh: "圖片網址（選填）" },
   "places.noPlacesHint": {
     en: "Click \"Add Place\" to save restaurants and attractions",
     zh: "點擊「新增景點」儲存餐廳和景點",
@@ -196,6 +210,9 @@ const translations = {
   "toast.itemUpdated": { en: "Item updated", zh: "已更新項目" },
   "toast.itemDeleted": { en: "Item deleted", zh: "已刪除項目" },
   "toast.error": { en: "Something went wrong", zh: "發生錯誤" },
+  "toast.slotAdded": { en: "Place added to itinerary", zh: "已新增景點至行程" },
+  "toast.slotRemoved": { en: "Place removed from itinerary", zh: "已從行程移除景點" },
+  "toast.slotFull": { en: "This slot is already full", zh: "此時段已滿" },
 
   // Theme
   "theme.light": { en: "Light", zh: "淺色" },
