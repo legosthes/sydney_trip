@@ -1,0 +1,10 @@
+node_modules
+dist
+.git
+.claude
+__pycache__
+*.pyc
+backend/sydney_trip.db
+backend/sydney_trip.db-wal
+backend/sydney_trip.db-shm
+.env
