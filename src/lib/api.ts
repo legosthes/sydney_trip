@@ -28,21 +28,6 @@ export interface AttractionRow {
   day_label: string | null;
 }
 
-export interface RestaurantRow {
-  id: string;
-  name: string;
-  cuisine: string | null;
-  description: string | null;
-  price_range: string | null;
-  address: string | null;
-  area: string;
-  maps_url: string | null;
-  website: string | null;
-  image_url: string | null;
-  kid_friendly: number;
-  meal_type: string | null;
-  day_labels: string | null;
-}
 
 // ── Budget API ──
 
@@ -100,22 +85,6 @@ export async function deleteExpense(id: string): Promise<void> {
 
 export async function getAllAttractions(): Promise<AttractionRow[]> {
   const res = await fetch(`${API_BASE}/attractions`);
-  return res.json();
-}
-
-// ── Restaurant API ──
-
-export async function getAllRestaurants(): Promise<RestaurantRow[]> {
-  const res = await fetch(`${API_BASE}/restaurants`);
-  return res.json();
-}
-
-export async function getRestaurantsByDay(
-  dayLabel: string
-): Promise<RestaurantRow[]> {
-  const res = await fetch(
-    `${API_BASE}/restaurants/by-day/${encodeURIComponent(dayLabel)}`
-  );
   return res.json();
 }
 
