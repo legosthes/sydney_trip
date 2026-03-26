@@ -73,6 +73,8 @@ const translations = {
   "itinerary.searchPlaces": { en: "Search places...", zh: "搜尋景點..." },
   "itinerary.dragHint": { en: "Drag from sidebar or click + to add", zh: "從側欄拖曳或點擊 + 新增" },
   "itinerary.allPlaces": { en: "All Saved Places", zh: "所有已儲存景點" },
+  "itinerary.unassigned": { en: "Unassigned Places", zh: "未分配景點" },
+  "itinerary.allAssigned": { en: "All places assigned!", zh: "所有景點已分配！" },
 
   // My Places
   "places.title": { en: "My Places", zh: "我的景點" },
@@ -90,6 +92,7 @@ const translations = {
   "places.dayLabels": { en: "Assign to days", zh: "指定日期" },
   "places.save": { en: "Save", zh: "儲存" },
   "places.all": { en: "All", zh: "全部" },
+  "places.search": { en: "Search places...", zh: "搜尋景點..." },
   "places.map": { en: "Map", zh: "地圖" },
   "places.noPlaces": { en: "No places saved yet", zh: "尚未儲存景點" },
   "places.imageUrl": { en: "Image URL (optional)", zh: "圖片網址（選填）" },

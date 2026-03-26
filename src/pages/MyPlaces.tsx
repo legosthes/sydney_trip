@@ -9,6 +9,7 @@ import {
   ExternalLink,
   Loader2,
   MapPinned,
+  Search,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -61,6 +62,8 @@ export function MyPlaces() {
   const [places, setPlaces] = useState<PlaceRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedDay, setSelectedDay] = useState("All");
+  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [searchTerm, setSearchTerm] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState<PlaceForm>(emptyForm);
@@ -73,11 +76,16 @@ export function MyPlaces() {
   }, []);
 
   const dayFilters = ["All", ...itinerary.map((d) => d.dayLabel)];
+  const categoryFilters = ["All", ...CATEGORIES];
 
-  const filtered =
-    selectedDay === "All"
-      ? places
-      : places.filter((p) => p.day_labels?.includes(selectedDay));
+  const filtered = places
+    .filter((p) => selectedDay === "All" || p.day_labels?.includes(selectedDay))
+    .filter((p) => selectedCategory === "All" || p.category === selectedCategory)
+    .filter((p) => !searchTerm ||
+      p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      p.category?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      p.notes?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
   const openAdd = () => {
     setEditingId(null);
@@ -155,22 +163,50 @@ export function MyPlaces() {
         }
       />
 
-      {/* Day Filter */}
-      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-        {dayFilters.map((d) => (
-          <button
-            key={d}
-            onClick={() => setSelectedDay(d)}
-            className={cn(
-              "flex-shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-colors border",
-              selectedDay === d
-                ? "bg-primary text-primary-foreground border-primary"
-                : "border-border hover:bg-secondary text-foreground"
-            )}
-          >
-            {d === "All" ? t("places.all") : d}
-          </button>
-        ))}
+      {/* Filters: Day pills + Search */}
+      <div className="space-y-3">
+        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+          {dayFilters.map((d) => (
+            <button
+              key={d}
+              onClick={() => setSelectedDay(d)}
+              className={cn(
+                "flex-shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-colors border",
+                selectedDay === d
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "border-border hover:bg-secondary text-foreground"
+              )}
+            >
+              {d === "All" ? t("places.all") : d}
+            </button>
+          ))}
+        </div>
+        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+          {categoryFilters.map((c) => (
+            <button
+              key={c}
+              onClick={() => setSelectedCategory(c)}
+              className={cn(
+                "flex-shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-colors border",
+                selectedCategory === c
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "border-border hover:bg-secondary text-foreground"
+              )}
+            >
+              {c}
+            </button>
+          ))}
+        </div>
+        <div className="relative max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <input
+            type="text"
+            placeholder={t("places.search")}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="flex h-9 w-full rounded-lg border border-input bg-transparent pl-9 pr-3 py-1 text-sm transition-colors placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+        </div>
       </div>
 
       {/* Add/Edit Modal */}

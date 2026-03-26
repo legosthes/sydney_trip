@@ -14,6 +14,8 @@ import {
   Loader2,
   Search,
   GripVertical,
+  PanelRightClose,
+  PanelRightOpen,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
@@ -169,7 +171,7 @@ function DroppableSlot({
 
       {/* Place cards */}
       {slotPlaces.length > 0 ? (
-        <div className={cn("grid gap-2", isMeal ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3")}>
+        <div className={cn("grid gap-2", isMeal ? "grid-cols-1" : slotPlaces.length === 1 ? "grid-cols-1" : slotPlaces.length === 2 ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3")}>
           {slotPlaces.map(({ slot, place }) =>
             place ? (
               <div
@@ -250,6 +252,8 @@ export function Itinerary() {
   const [pickerSlotType, setPickerSlotType] = useState<SlotType | null>(null);
   const [focusedLocation, setFocusedLocation] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeDragPlace, setActiveDragPlace] = useState<PlaceRow | null>(null);
 
   const dayNumber = selectedDay + 1;
@@ -345,7 +349,24 @@ export function Itinerary() {
     }
   };
 
-  // Filtered places for picker
+  // Unassigned places (not in current day's slots)
+  const unassignedPlaces = allPlaces.filter(
+    (p) => !daySlots.some((s) => s.place_id === p.id)
+  );
+
+  // Unique categories from all places
+  const placeCategories = ["All", ...Array.from(new Set(allPlaces.map((p) => p.category).filter(Boolean) as string[]))];
+
+  // Filtered unassigned for sidebar
+  const filteredUnassigned = unassignedPlaces.filter((p) => {
+    const matchesSearch = !searchTerm ||
+      p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      p.category?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = selectedCategory === "All" || p.category === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
+
+  // Filtered places for picker modal (all places, not just unassigned)
   const pickerPlaces = allPlaces.filter((p) => {
     if (!searchTerm) return true;
     return p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -390,10 +411,11 @@ export function Itinerary() {
           </div>
         </div>
 
-        {/* Row 1: Photo (left) | Slot Timeline (right) */}
-        <div className="grid gap-6 lg:grid-cols-2">
-          {/* Day photo */}
-          <div>
+        {/* 3-column layout: [Photo+Map | Slots | Unassigned Sidebar] */}
+        <div className={cn("grid gap-5", sidebarOpen ? "lg:grid-cols-[1fr_1.5fr_260px]" : "lg:grid-cols-[1fr_1.5fr_40px]")}>
+          {/* Left column: Photo + Map */}
+          <div className="space-y-3">
+            {/* Day photo */}
             <div className="relative overflow-hidden rounded-2xl">
               <img
                 src={itinerary[selectedDay].image}
@@ -401,17 +423,54 @@ export function Itinerary() {
                 className="aspect-[4/3] w-full object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-              <div className="absolute bottom-0 p-6">
+              <div className="absolute bottom-0 p-5">
                 <Badge className="mb-2 bg-white/20 text-white backdrop-blur-sm border-white/30">
                   {itinerary[selectedDay].dayLabel}
                 </Badge>
-                <h2 className="text-2xl font-bold text-white">{itinerary[selectedDay].title}</h2>
+                <h2 className="text-xl font-bold text-white">{itinerary[selectedDay].title}</h2>
                 <p className="text-white/70 text-sm mt-1">{itinerary[selectedDay].date}</p>
               </div>
             </div>
+
+            {/* Map — directly under photo */}
+            <Card className="border-border/50 overflow-hidden">
+              <div className="flex items-center justify-between px-3 pt-2 pb-1">
+                <div className="flex items-center gap-2">
+                  <MapPinned className="h-3.5 w-3.5 text-primary" />
+                  <h3 className="font-semibold text-xs">
+                    {focusedLocation || t("itinerary.mapView")}
+                  </h3>
+                </div>
+                {focusedLocation && (
+                  <button
+                    type="button"
+                    onClick={() => setFocusedLocation(null)}
+                    className="text-[10px] text-primary hover:underline"
+                  >
+                    {t("itinerary.showAll")}
+                  </button>
+                )}
+              </div>
+              <CardContent className="p-1.5">
+                {mapUrl ? (
+                  <iframe
+                    key={mapUrl}
+                    src={mapUrl}
+                    className="w-full h-[300px] lg:h-[400px] xl:h-[500px] rounded-lg border-0"
+                    loading="lazy"
+                    allowFullScreen
+                    title="Day route map"
+                  />
+                ) : (
+                  <div className="flex items-center justify-center h-[300px] text-muted-foreground text-sm">
+                    {t("itinerary.dragHint")}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </div>
 
-          {/* Slot Timeline */}
+          {/* Center column: Slot Timeline */}
           <div className="space-y-3">
             {SLOT_ORDER.map((slotType) => (
               <DroppableSlot
@@ -428,74 +487,96 @@ export function Itinerary() {
               />
             ))}
           </div>
-        </div>
 
-        {/* Row 2: Map (left) | All Saved Places sidebar (right) */}
-        <div className="grid gap-6 lg:grid-cols-2 mt-4">
-          {/* Map */}
-          <Card className="border-border/50 overflow-hidden">
-            <div className="flex items-center justify-between px-4 pt-3 pb-1">
-              <div className="flex items-center gap-2">
-                <MapPinned className="h-4 w-4 text-primary" />
-                <h3 className="font-semibold text-sm">
-                  {focusedLocation || t("itinerary.mapView")}
-                </h3>
+          {/* Right column: Collapsible Unassigned Places sidebar */}
+          <div className="lg:sticky lg:top-20 lg:self-start">
+            {sidebarOpen ? (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <MapPinned className="h-3.5 w-3.5 text-primary" />
+                    <h3 className="font-semibold text-xs">{t("itinerary.unassigned")}</h3>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Link to="/places" className="text-[10px] text-primary hover:underline no-underline">
+                      {t("itinerary.viewAll")}
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => setSidebarOpen(false)}
+                      className="hidden lg:inline-flex h-6 w-6 items-center justify-center rounded-md hover:bg-muted transition-colors text-muted-foreground"
+                      title="Collapse sidebar"
+                    >
+                      <PanelRightClose className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Search */}
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+                  <input
+                    type="text"
+                    placeholder={t("itinerary.searchPlaces")}
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="flex h-8 w-full rounded-lg border border-input bg-transparent pl-7 pr-3 py-1 text-xs transition-colors placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </div>
+
+                {/* Category filter */}
+                {placeCategories.length > 2 && (
+                  <div className="flex gap-1 flex-wrap">
+                    {placeCategories.map((cat) => (
+                      <button
+                        key={cat}
+                        type="button"
+                        onClick={() => setSelectedCategory(cat)}
+                        className={cn(
+                          "rounded-full px-2 py-0.5 text-[10px] font-medium transition-colors border",
+                          selectedCategory === cat
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : "border-border hover:bg-secondary text-foreground"
+                        )}
+                      >
+                        {cat}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                <p className="text-[10px] text-muted-foreground">{t("itinerary.dragHint")}</p>
+
+                <div className="space-y-2 max-h-[calc(100vh-300px)] overflow-y-auto pr-1">
+                  {filteredUnassigned.length > 0 ? (
+                    filteredUnassigned.map((p) => <DraggablePlaceCard key={p.id} place={p} />)
+                  ) : unassignedPlaces.length === 0 ? (
+                    <div className="rounded-lg border border-dashed border-border/60 py-6 text-center">
+                      <p className="text-[10px] text-muted-foreground">{t("itinerary.allAssigned")}</p>
+                    </div>
+                  ) : (
+                    <div className="rounded-lg border border-dashed border-border/60 py-6 text-center">
+                      <p className="text-[10px] text-muted-foreground">{t("places.noPlaces")}</p>
+                    </div>
+                  )}
+                </div>
               </div>
-              {focusedLocation && (
+            ) : (
+              /* Collapsed sidebar — just a toggle button */
+              <div className="hidden lg:flex flex-col items-center pt-1">
                 <button
                   type="button"
-                  onClick={() => setFocusedLocation(null)}
-                  className="text-xs text-primary hover:underline"
+                  onClick={() => setSidebarOpen(true)}
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border hover:bg-secondary transition-colors text-muted-foreground"
+                  title="Expand sidebar"
                 >
-                  {t("itinerary.showAll")}
+                  <PanelRightOpen className="h-4 w-4" />
                 </button>
-              )}
-            </div>
-            <CardContent className="p-2">
-              {mapUrl ? (
-                <iframe
-                  key={mapUrl}
-                  src={mapUrl}
-                  className="w-full h-[350px] lg:h-[450px] rounded-lg border-0"
-                  loading="lazy"
-                  allowFullScreen
-                  title="Day route map"
-                />
-              ) : (
-                <div className="flex items-center justify-center h-[350px] text-muted-foreground text-sm">
-                  Add places to see them on the map
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* All Saved Places — draggable sidebar */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <MapPinned className="h-4 w-4 text-primary" />
-                <h3 className="font-semibold text-sm">{t("itinerary.allPlaces")}</h3>
+                <span className="text-[9px] text-muted-foreground mt-1 [writing-mode:vertical-lr]">
+                  {t("itinerary.unassigned")} ({unassignedPlaces.length})
+                </span>
               </div>
-              <Link to="/places" className="text-xs text-primary hover:underline no-underline">
-                {t("itinerary.viewAll")}
-              </Link>
-            </div>
-            <p className="text-[11px] text-muted-foreground">{t("itinerary.dragHint")}</p>
-            <div className="space-y-2 max-h-[420px] overflow-y-auto pr-1">
-              {allPlaces.length > 0 ? (
-                allPlaces.map((p) => <DraggablePlaceCard key={p.id} place={p} />)
-              ) : (
-                <Card className="border-border/50 border-dashed">
-                  <CardContent className="flex flex-col items-center justify-center py-8 text-center">
-                    <MapPinned className="h-5 w-5 text-muted-foreground mb-2" />
-                    <p className="text-xs text-muted-foreground">{t("places.noPlaces")}</p>
-                    <Link to="/places" className="text-xs text-primary mt-1 hover:underline no-underline">
-                      {t("places.addPlace")} →
-                    </Link>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
+            )}
           </div>
         </div>
 
