@@ -44,7 +44,7 @@ import type { TranslationKey } from "@/i18n/translations";
 
 // ── Slot constants ──
 
-const SLOT_ORDER: SlotType[] = ["morning", "breakfast", "afternoon", "lunch", "evening", "dinner"];
+const SLOT_ORDER: SlotType[] = ["breakfast", "morning", "lunch", "afternoon", "dinner", "evening"];
 const MEAL_SLOTS: SlotType[] = ["breakfast", "lunch", "dinner"];
 
 function slotMax(type: SlotType): number {
@@ -176,38 +176,51 @@ function DroppableSlot({
                 key={slot.id}
                 onClick={() => onFocusLocation(place.name)}
                 className={cn(
-                  "group relative flex items-center gap-2 rounded-lg border p-2 bg-card cursor-pointer transition-all hover:shadow-sm",
+                  "group relative flex flex-col rounded-lg border bg-card cursor-pointer transition-all hover:shadow-sm overflow-hidden",
                   focusedLocation === place.name ? "border-primary ring-1 ring-primary/30" : "border-border/50"
                 )}
+                style={{ minHeight: "236px" }}
               >
+                {/* Image area */}
                 {place.image_url ? (
-                  <img src={place.image_url} alt="" className="h-10 w-10 rounded-md object-cover flex-shrink-0" />
+                  <div className="h-28 w-full overflow-hidden flex-shrink-0">
+                    <img src={place.image_url} alt="" className="h-full w-full object-cover" />
+                  </div>
                 ) : (
-                  <div className="h-10 w-10 rounded-md bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <MapPin className="h-4 w-4 text-primary" />
+                  <div className="h-28 w-full bg-primary/5 flex items-center justify-center flex-shrink-0">
+                    <MapPin className="h-8 w-8 text-primary/30" />
                   </div>
                 )}
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs font-semibold truncate">{place.name}</p>
-                  {place.category && (
-                    <Badge variant="secondary" className="text-[9px] mt-0.5">{place.category}</Badge>
-                  )}
+                {/* Info area */}
+                <div className="flex-1 p-3 flex flex-col justify-between">
+                  <div>
+                    <p className="text-xs font-semibold leading-tight">{place.name}</p>
+                    {place.category && (
+                      <Badge variant="secondary" className="text-[9px] mt-1">{place.category}</Badge>
+                    )}
+                    {place.notes && (
+                      <p className="text-[10px] text-muted-foreground mt-1 line-clamp-2">{place.notes}</p>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1.5 mt-2">
+                    {place.maps_url && (
+                      <a
+                        href={place.maps_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="inline-flex items-center gap-0.5 text-[10px] text-muted-foreground hover:text-primary"
+                      >
+                        <MapPin className="h-2.5 w-2.5" /> Map <ExternalLink className="h-2 w-2" />
+                      </a>
+                    )}
+                  </div>
                 </div>
-                {place.maps_url && (
-                  <a
-                    href={place.maps_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={(e) => e.stopPropagation()}
-                    className="text-muted-foreground hover:text-primary flex-shrink-0"
-                  >
-                    <ExternalLink className="h-3 w-3" />
-                  </a>
-                )}
+                {/* Remove button */}
                 <button
                   type="button"
                   onClick={(e) => { e.stopPropagation(); onRemove(slot.id); }}
-                  className="absolute -top-1.5 -right-1.5 hidden group-hover:flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-white text-[10px] shadow-sm"
+                  className="absolute top-1.5 right-1.5 hidden group-hover:flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-white text-[10px] shadow-sm"
                 >
                   <X className="h-3 w-3" />
                 </button>
@@ -418,7 +431,7 @@ export function Itinerary() {
         </div>
 
         {/* Row 2: Map (left) | All Saved Places sidebar (right) */}
-        <div className="grid gap-6 lg:grid-cols-2 mt-6">
+        <div className="grid gap-6 lg:grid-cols-2 mt-4">
           {/* Map */}
           <Card className="border-border/50 overflow-hidden">
             <div className="flex items-center justify-between px-4 pt-3 pb-1">
