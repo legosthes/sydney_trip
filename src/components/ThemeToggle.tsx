@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from "react";
-import { Sun, Moon, Waves, Sunset, Palette, Leaf, Mountain, Cherry } from "lucide-react";
+import { Sun, Moon, Waves, Sunset, Palette, Leaf, Mountain, Zap, Triangle } from "lucide-react";
 import { useTranslation } from "@/i18n/LanguageContext";
 import type { TranslationKey } from "@/i18n/translations";
 
-export type Theme = "light" | "dark" | "ocean" | "sunset" | "forest" | "slate" | "sakura";
+export type Theme = "light" | "dark" | "ocean" | "sunset" | "forest" | "slate" | "neon" | "brutalist";
 
 const themeConfig: { id: Theme; icon: typeof Sun; labelKey: TranslationKey }[] = [
   { id: "light", icon: Sun, labelKey: "theme.light" },
@@ -12,12 +12,13 @@ const themeConfig: { id: Theme; icon: typeof Sun; labelKey: TranslationKey }[] =
   { id: "sunset", icon: Sunset, labelKey: "theme.sunset" },
   { id: "forest", icon: Leaf, labelKey: "theme.forest" },
   { id: "slate", icon: Mountain, labelKey: "theme.slate" },
-  { id: "sakura", icon: Cherry, labelKey: "theme.sakura" },
+  { id: "neon", icon: Zap, labelKey: "theme.neon" },
+  { id: "brutalist", icon: Triangle, labelKey: "theme.brutalist" },
 ];
 
 function applyTheme(theme: Theme) {
   const root = document.documentElement;
-  root.classList.remove("dark", "theme-ocean", "theme-sunset", "theme-forest", "theme-slate", "theme-sakura");
+  root.classList.remove("dark", "theme-ocean", "theme-sunset", "theme-forest", "theme-slate", "theme-neon", "theme-brutalist");
   if (theme === "dark") root.classList.add("dark");
   else if (theme !== "light") root.classList.add(`theme-${theme}`);
   localStorage.setItem("sydney-theme", theme);
@@ -26,7 +27,9 @@ function applyTheme(theme: Theme) {
 export function ThemeToggle() {
   const { t } = useTranslation();
   const [theme, setTheme] = useState<Theme>(() => {
-    return (localStorage.getItem("sydney-theme") as Theme) || "light";
+    const stored = localStorage.getItem("sydney-theme") as Theme;
+    const valid = themeConfig.some((tc) => tc.id === stored);
+    return valid ? stored : "light";
   });
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);

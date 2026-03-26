@@ -23,7 +23,6 @@ import {
   type PlaceRow,
 } from "@/lib/api";
 import { useTranslation } from "@/i18n/LanguageContext";
-import { itinerary } from "@/data/trip";
 import { cn } from "@/lib/utils";
 
 const CATEGORIES = [
@@ -61,7 +60,6 @@ export function MyPlaces() {
   const { toast } = useToast();
   const [places, setPlaces] = useState<PlaceRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedDay, setSelectedDay] = useState("All");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [searchTerm, setSearchTerm] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -75,11 +73,9 @@ export function MyPlaces() {
     });
   }, []);
 
-  const dayFilters = ["All", ...itinerary.map((d) => d.dayLabel)];
   const categoryFilters = ["All", ...CATEGORIES];
 
   const filtered = places
-    .filter((p) => selectedDay === "All" || p.day_labels?.includes(selectedDay))
     .filter((p) => selectedCategory === "All" || p.category === selectedCategory)
     .filter((p) => !searchTerm ||
       p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -166,22 +162,6 @@ export function MyPlaces() {
       {/* Filters: Day pills + Search */}
       <div className="space-y-3">
         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-          {dayFilters.map((d) => (
-            <button
-              key={d}
-              onClick={() => setSelectedDay(d)}
-              className={cn(
-                "flex-shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-colors border",
-                selectedDay === d
-                  ? "bg-primary text-primary-foreground border-primary"
-                  : "border-border hover:bg-secondary text-foreground"
-              )}
-            >
-              {d === "All" ? t("places.all") : d}
-            </button>
-          ))}
-        </div>
-        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
           {categoryFilters.map((c) => (
             <button
               key={c}
@@ -249,13 +229,6 @@ export function MyPlaces() {
                 <label htmlFor="place-img" className="text-sm font-medium">{t("places.imageUrl")}</label>
                 <input id="place-img" type="url" placeholder="https://images.unsplash.com/..." value={formData.image_url} onChange={(e) => setFormData({ ...formData, image_url: e.target.value })} className="flex h-9 w-full rounded-lg border border-input bg-transparent px-3 py-1 text-sm transition-colors placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring" />
               </div>
-              <div className="space-y-1.5">
-                <label htmlFor="place-days" className="text-sm font-medium">{t("places.dayLabels")}</label>
-                <select id="place-days" multiple value={formData.day_labels ? formData.day_labels.split(",") : []} onChange={(e) => { const vals = Array.from(e.target.selectedOptions).map(o => o.value); setFormData({ ...formData, day_labels: vals.join(",") }); }} className="flex w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-ring h-24">
-                  {itinerary.map((d) => <option key={d.dayLabel} value={d.dayLabel}>{d.dayLabel} - {d.date}</option>)}
-                </select>
-                <p className="text-xs text-muted-foreground">Hold Ctrl/Cmd to select multiple days</p>
-              </div>
               <button type="submit" className="w-full rounded-full bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors">
                 {editingId ? t("places.save") : t("places.addPlace")}
               </button>
@@ -303,9 +276,6 @@ export function MyPlaces() {
                       {place.category && (
                         <Badge variant="secondary" className="text-xs">{place.category}</Badge>
                       )}
-                      {place.day_labels && place.day_labels.split(",").map((d) => (
-                        <Badge key={d} className="bg-primary/10 text-primary border-0 text-[10px]">{d.trim()}</Badge>
-                      ))}
                     </div>
                   </div>
                   <div className="flex gap-1 flex-shrink-0">

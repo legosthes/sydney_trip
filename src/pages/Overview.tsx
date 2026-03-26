@@ -9,6 +9,7 @@ import {
   ExternalLink,
   Clock,
   Wallet,
+  Globe,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
@@ -16,7 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { tripInfo, itinerary } from "@/data/trip";
-import { getAllAttractions, type AttractionRow } from "@/lib/api";
+import { getAllAttractions, getAllPlaces, type AttractionRow, type PlaceRow } from "@/lib/api";
 import { useBudget } from "@/hooks/useBudget";
 import { useTranslation } from "@/i18n/LanguageContext";
 import { CATEGORY_COLORS } from "@/data/budget";
@@ -29,6 +30,7 @@ function formatTWD(amount: number) {
 export function Overview() {
   const { t } = useTranslation();
   const [attractions, setAttractions] = useState<AttractionRow[]>([]);
+  const [places, setPlaces] = useState<PlaceRow[]>([]);
   const { budgets, getSpentByCategory, totalBudget, totalSpent } = useBudget();
 
   useEffect(() => {
@@ -36,8 +38,20 @@ export function Overview() {
     getAllAttractions().then((rows) => {
       if (!cancelled) setAttractions(rows);
     });
+    getAllPlaces().then((rows) => {
+      if (!cancelled) setPlaces(rows);
+    });
     return () => { cancelled = true; };
   }, []);
+
+  const sortedPlaces = useMemo(
+    () => [...places].sort((a, b) => {
+      if (a.image_url && !b.image_url) return -1;
+      if (!a.image_url && b.image_url) return 1;
+      return 0;
+    }),
+    [places]
+  );
 
   const highlights = useMemo(
     () =>
@@ -294,6 +308,67 @@ export function Overview() {
                     <p className="text-[10px] text-muted-foreground mt-0.5 flex items-center gap-1">
                       <MapPin className="h-2.5 w-2.5" /> {a.location}
                     </p>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Saved Places */}
+      {sortedPlaces.length > 0 && (
+        <section>
+          <div className="mb-6 flex items-end justify-between">
+            <div>
+              <h2 className="text-2xl font-bold tracking-tight">{t("overview.places")}</h2>
+              <p className="text-muted-foreground">{t("overview.placesDesc")}</p>
+            </div>
+            <Link to="/places" className="text-sm font-medium text-primary hover:underline no-underline flex items-center gap-1">
+              {t("overview.seeAll")} <ArrowRight className="h-3 w-3" />
+            </Link>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {sortedPlaces.map((p) => (
+              <Card key={p.id} className="group overflow-hidden border-border/50 shadow-sm hover:shadow-md transition-all hover:-translate-y-0.5 py-0">
+                {p.image_url ? (
+                  <div className="relative h-36 w-full overflow-hidden">
+                    <img
+                      src={p.image_url}
+                      alt={p.name}
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+                    {p.category && (
+                      <Badge className="absolute top-2 left-2 bg-white/90 text-foreground border-0 text-[10px]">{p.category}</Badge>
+                    )}
+                  </div>
+                ) : (
+                  <div className="relative h-20 w-full bg-muted flex items-center justify-center">
+                    <MapPin className="h-6 w-6 text-muted-foreground/40" />
+                    {p.category && (
+                      <Badge className="absolute top-2 left-2 bg-secondary text-foreground border-0 text-[10px]">{p.category}</Badge>
+                    )}
+                  </div>
+                )}
+                <CardContent className="p-3 space-y-1">
+                  <div className="flex items-center justify-between gap-1">
+                    <p className="font-semibold text-xs truncate">{p.name}</p>
+                    <div className="flex gap-1 flex-shrink-0">
+                      {p.maps_url && (
+                        <a href={p.maps_url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary cursor-pointer">
+                          <MapPin className="h-3 w-3" />
+                        </a>
+                      )}
+                      {p.website && (
+                        <a href={p.website} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary cursor-pointer">
+                          <Globe className="h-3 w-3" />
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                  {p.notes && (
+                    <p className="text-[10px] text-muted-foreground truncate">{p.notes}</p>
                   )}
                 </CardContent>
               </Card>

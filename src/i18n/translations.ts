@@ -33,6 +33,11 @@ const translations = {
     en: "Every stop on our Sydney adventure",
     zh: "雪梨之旅的每一站",
   },
+  "overview.places": { en: "Saved Places", zh: "已儲存景點" },
+  "overview.placesDesc": {
+    en: "Restaurants, cafes, and spots on our list",
+    zh: "我們清單上的餐廳、咖啡廳和景點",
+  },
   "overview.journey": { en: "6-Day Journey", zh: "六日旅程" },
   "overview.journeyDesc": {
     en: "A day-by-day snapshot of our Sydney adventure",
@@ -131,6 +136,7 @@ const translations = {
   "budget.currency": { en: "Currency", zh: "幣別" },
   "budget.date": { en: "Date", zh: "日期" },
   "budget.save": { en: "Save", zh: "儲存" },
+  "budget.exportCsv": { en: "Export CSV", zh: "匯出 CSV" },
 
   // Travel Info
   "info.title": { en: "Travel Info", zh: "旅遊資訊" },
@@ -224,7 +230,8 @@ const translations = {
   "theme.sunset": { en: "Sunset", zh: "夕陽" },
   "theme.forest": { en: "Forest", zh: "森林" },
   "theme.slate": { en: "Slate", zh: "石墨" },
-  "theme.sakura": { en: "Sakura", zh: "櫻花" },
+  "theme.neon": { en: "Neon", zh: "霓虹" },
+  "theme.brutalist": { en: "Brutalist", zh: "粗獷" },
 } as const;
 
 export type TranslationKey = keyof typeof translations;

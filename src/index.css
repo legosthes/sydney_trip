@@ -95,7 +95,7 @@
 
 /* ═══ Dark ═══ */
 .dark {
-  --background: #0f1117;
+  --background: #1a1b23;
   --foreground: #e4e4e7;
   --card: #18191f;
   --card-foreground: #e4e4e7;
@@ -233,32 +233,60 @@
   --chart-5: #2563eb;
 }
 
-/* ═══ Sakura ═══ */
-.theme-sakura {
-  --background: #fdf2f8;
-  --foreground: #3b1c32;
+/* ═══ Neon ═══ */
+.theme-neon {
+  --background: #0a0a0f;
+  --foreground: #e0e0e8;
+  --card: #12121a;
+  --card-foreground: #e0e0e8;
+  --popover: #12121a;
+  --popover-foreground: #e0e0e8;
+  --primary: #00ff88;
+  --primary-foreground: #0a0a0f;
+  --secondary: #1a1a28;
+  --secondary-foreground: #00ff88;
+  --muted: #1a1a28;
+  --muted-foreground: #7a7a8e;
+  --accent: #1a1a28;
+  --accent-foreground: #e0e0e8;
+  --destructive: #ff3366;
+  --destructive-foreground: #0a0a0f;
+  --border: #2a2a3a;
+  --input: #2a2a3a;
+  --ring: #00ff88;
+  --chart-1: #00ff88;
+  --chart-2: #00ccff;
+  --chart-3: #ff3366;
+  --chart-4: #ffcc00;
+  --chart-5: #aa55ff;
+}
+
+/* ═══ Brutalist ═══ */
+.theme-brutalist {
+  --background: #f5f0e6;
+  --foreground: #1a1a1a;
   --card: #ffffff;
-  --card-foreground: #3b1c32;
+  --card-foreground: #1a1a1a;
   --popover: #ffffff;
-  --popover-foreground: #3b1c32;
-  --primary: #db2777;
+  --popover-foreground: #1a1a1a;
+  --primary: #ff2200;
   --primary-foreground: #ffffff;
-  --secondary: #fce7f3;
-  --secondary-foreground: #db2777;
-  --muted: #fce7f3;
-  --muted-foreground: #9d5080;
-  --accent: #fce7f3;
-  --accent-foreground: #db2777;
-  --destructive: #dc2626;
+  --secondary: #e8e0d0;
+  --secondary-foreground: #1a1a1a;
+  --muted: #e8e0d0;
+  --muted-foreground: #666666;
+  --accent: #e8e0d0;
+  --accent-foreground: #1a1a1a;
+  --destructive: #ff2200;
   --destructive-foreground: #ffffff;
-  --border: #f5c2d9;
-  --input: #f5c2d9;
-  --ring: #db2777;
-  --chart-1: #db2777;
-  --chart-2: #ec4899;
-  --chart-3: #f472b6;
-  --chart-4: #f9a8d4;
-  --chart-5: #831843;
+  --border: #1a1a1a;
+  --input: #1a1a1a;
+  --ring: #ff2200;
+  --chart-1: #ff2200;
+  --chart-2: #1a1a1a;
+  --chart-3: #ff8800;
+  --chart-4: #ffcc00;
+  --chart-5: #666666;
 }
 
 @layer base {
@@ -271,5 +299,13 @@
   }
   html {
     @apply font-sans scroll-smooth;
+  }
+  button,
+  a,
+  [role="button"],
+  select,
+  label[for],
+  summary {
+    cursor: pointer;
   }
 }
