@@ -25,7 +25,7 @@ export function PageHero({ image, badge, title, subtitle, action }: PageHeroProp
         </Badge>
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white font-heading">
               {title}
             </h1>
             <p className="mt-1 text-sm text-white/70 max-w-lg">

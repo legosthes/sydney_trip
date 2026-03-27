@@ -57,7 +57,7 @@ export function TravelInfo() {
                     <div className="rounded-xl p-2.5 transition-transform duration-300 hover:scale-110" style={{ backgroundColor: `${s.color}15` }}>
                       <Icon className="h-5 w-5" style={{ color: s.color }} />
                     </div>
-                    <h2 className="font-semibold">{t(s.titleKey)}</h2>
+                    <h2 className="font-semibold font-heading text-lg">{t(s.titleKey)}</h2>
                   </div>
                   <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
                     {t(s.contentKey)}

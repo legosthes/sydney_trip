@@ -269,7 +269,7 @@ function DroppableSlot({
                     <p
                       className={cn(
                         "font-semibold leading-tight",
-                        isSingle ? "text-lg" : "text-xs",
+                        isSingle ? "text-xl" : "text-sm",
                       )}
                     >
                       {place.name}
@@ -562,7 +562,7 @@ export function Itinerary() {
       <div className="pb-20">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold tracking-tight">
+          <h1 className="text-3xl font-bold tracking-tight font-heading">
             {t("itinerary.title")}
           </h1>
           <p className="text-muted-foreground mt-1">
@@ -678,7 +678,7 @@ export function Itinerary() {
                   </div>
                 ) : (
                   <div className="group/title flex items-center gap-2">
-                    <h2 className="text-xl font-bold text-white">{dayTitle}</h2>
+                    <h2 className="text-xl font-bold text-white font-heading">{dayTitle}</h2>
                     <button
                       type="button"
                       onClick={() => {

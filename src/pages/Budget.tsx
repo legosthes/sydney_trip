@@ -259,7 +259,7 @@ export function Budget() {
                     <div className={cn("rounded-xl p-3", card.iconClass)}><Icon className={cn("h-5 w-5", card.iconColor)} /></div>
                     <div>
                       <p className="text-sm text-muted-foreground">{card.label}</p>
-                      <p className={cn("text-xl font-bold", i === 2 && remaining < 0 && "text-destructive")}>{card.value}</p>
+                      <p className={cn("text-2xl font-bold font-heading", i === 2 && remaining < 0 && "text-destructive")}>{card.value}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -285,7 +285,7 @@ export function Budget() {
       {/* Category Budgets */}
       <div className="animate-in" style={{ animationDelay: "320ms", animationFillMode: "both" }}>
       <div>
-        <h2 className="text-xl font-bold tracking-tight mb-4">{t("budget.categoryBudgets")}</h2>
+        <h2 className="text-xl font-bold tracking-tight font-heading mb-4">{t("budget.categoryBudgets")}</h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {budgets.map((b, idx) => {
             const Icon = categoryIcons[b.category] || Wallet;
@@ -344,7 +344,7 @@ export function Budget() {
       {/* Expense List */}
       <div className="animate-in" style={{ animationDelay: "500ms", animationFillMode: "both" }}>
         <div className="flex items-end justify-between mb-4">
-          <h2 className="text-xl font-bold tracking-tight">{t("budget.expenses")}</h2>
+          <h2 className="text-xl font-bold tracking-tight font-heading">{t("budget.expenses")}</h2>
           <Badge variant="secondary">{expenses.length} {t("budget.items")}</Badge>
         </div>
         {expenses.length === 0 ? (

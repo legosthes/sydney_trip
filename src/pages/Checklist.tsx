@@ -207,7 +207,7 @@ export function Checklist() {
           return (
             <div key={group.category} className="animate-in" style={{ animationDelay: `${80 + gi * 80}ms`, animationFillMode: "both" }}>
               <div className="flex items-center gap-2 mb-3">
-                <h2 className="font-semibold text-sm">{group.category}</h2>
+                <h2 className="font-semibold text-base font-heading">{group.category}</h2>
                 <Badge variant="secondary" className="text-xs">
                   {groupChecked}/{group.items.length}
                 </Badge>

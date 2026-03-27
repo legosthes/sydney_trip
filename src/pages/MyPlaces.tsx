@@ -382,7 +382,7 @@ export function MyPlaces() {
               <CardContent className="p-4 space-y-3">
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <h3 className="font-semibold text-sm">{place.name}</h3>
+                    <h3 className="font-semibold text-lg">{place.name}</h3>
                     <div className="flex items-center gap-2 mt-1 flex-wrap">
                       {place.category && (
                         <Badge variant="secondary" className="text-xs">

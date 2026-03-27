@@ -47,7 +47,7 @@
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
   --font-sans: 'Geist Variable', sans-serif;
-  --font-heading: var(--font-sans);
+  --font-heading: 'Geist Variable', sans-serif;
   --color-nature: #2d6a4f;
   --color-nature-light: #b7e4c7;
   --color-sand: #f5f0e8;
@@ -310,6 +310,10 @@
   }
 }
 
+.font-heading {
+  font-family: var(--font-heading);
+}
+
 /* ═══ Utilities ═══ */
 .scrollbar-hide {
   -ms-overflow-style: none;
@@ -332,4 +336,13 @@
 
 .animate-in {
   animation: fade-in 400ms ease-out, slide-in-from-bottom-2 400ms ease-out;
+}
+
+@keyframes hero-fade {
+  from { opacity: 0; transform: scale(1.04); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.animate-hero-fade {
+  animation: hero-fade 800ms ease-out;
 }
