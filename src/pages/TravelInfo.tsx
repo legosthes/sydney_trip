@@ -47,22 +47,24 @@ export function TravelInfo() {
       />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {sections.map((s) => {
+        {sections.map((s, i) => {
           const Icon = s.icon;
           return (
-            <Card key={s.titleKey} className="border-border/50 shadow-sm">
-              <CardContent className="p-5 space-y-3">
-                <div className="flex items-center gap-3">
-                  <div className="rounded-xl p-2.5" style={{ backgroundColor: `${s.color}15` }}>
-                    <Icon className="h-5 w-5" style={{ color: s.color }} />
+            <div key={s.titleKey} className="animate-in" style={{ animationDelay: `${i * 70}ms`, animationFillMode: "both" }}>
+              <Card className="border-border/50 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
+                <CardContent className="p-5 space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className="rounded-xl p-2.5 transition-transform duration-300 hover:scale-110" style={{ backgroundColor: `${s.color}15` }}>
+                      <Icon className="h-5 w-5" style={{ color: s.color }} />
+                    </div>
+                    <h2 className="font-semibold">{t(s.titleKey)}</h2>
                   </div>
-                  <h2 className="font-semibold">{t(s.titleKey)}</h2>
-                </div>
-                <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
-                  {t(s.contentKey)}
-                </p>
-              </CardContent>
-            </Card>
+                  <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
+                    {t(s.contentKey)}
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
           );
         })}
       </div>

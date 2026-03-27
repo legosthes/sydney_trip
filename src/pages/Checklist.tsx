@@ -154,17 +154,19 @@ export function Checklist() {
       />
 
       {/* Progress */}
-      <Card className="border-border/50 shadow-sm">
-        <CardContent className="p-5">
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-sm font-medium">{t("checklist.progress")}</p>
-            <p className="text-sm text-muted-foreground">
-              {checkedItems} / {totalItems} {t("checklist.packed")}
-            </p>
-          </div>
-          <Progress value={progressPct} className="h-3" />
-        </CardContent>
-      </Card>
+      <div className="animate-in" style={{ animationFillMode: "both" }}>
+        <Card className="border-border/50 shadow-sm">
+          <CardContent className="p-5">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-sm font-medium">{t("checklist.progress")}</p>
+              <p className="text-sm text-muted-foreground">
+                {checkedItems} / {totalItems} {t("checklist.packed")}
+              </p>
+            </div>
+            <Progress value={progressPct} className="h-3" />
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Add/Edit Modal */}
       {dialogOpen && (
@@ -200,10 +202,10 @@ export function Checklist() {
 
       {/* Checklist Groups — two-column grid */}
       <div className="grid gap-6 lg:grid-cols-2">
-        {grouped.map((group) => {
+        {grouped.map((group, gi) => {
           const groupChecked = group.items.filter((i) => i.checked).length;
           return (
-            <div key={group.category}>
+            <div key={group.category} className="animate-in" style={{ animationDelay: `${80 + gi * 80}ms`, animationFillMode: "both" }}>
               <div className="flex items-center gap-2 mb-3">
                 <h2 className="font-semibold text-sm">{group.category}</h2>
                 <Badge variant="secondary" className="text-xs">
@@ -219,12 +221,12 @@ export function Checklist() {
                         <button
                           type="button"
                           onClick={() => toggleItem(item)}
-                          className="flex-shrink-0 text-primary hover:text-primary/70 transition-colors"
+                          className="flex-shrink-0 text-primary hover:text-primary/70 transition-all duration-200 active:scale-90"
                         >
                           {item.checked ? (
-                            <CheckSquare className="h-5 w-5" />
+                            <CheckSquare className="h-5 w-5 transition-transform duration-200 scale-110" />
                           ) : (
-                            <Square className="h-5 w-5 text-muted-foreground" />
+                            <Square className="h-5 w-5 text-muted-foreground transition-transform duration-200 hover:scale-110" />
                           )}
                         </button>
                         <span

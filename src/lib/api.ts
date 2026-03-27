@@ -88,6 +88,31 @@ export async function getAllAttractions(): Promise<AttractionRow[]> {
   return res.json();
 }
 
+// ── Day Customization API ──
+
+export interface DayCustomization {
+  day_number: number;
+  title: string | null;
+  image_url: string | null;
+}
+
+export async function getAllDayCustomizations(): Promise<DayCustomization[]> {
+  const res = await fetch(`${API_BASE}/day-customizations`);
+  return res.json();
+}
+
+export async function updateDayCustomization(
+  dayNumber: number,
+  data: { title?: string | null; image_url?: string | null }
+): Promise<DayCustomization> {
+  const res = await fetch(`${API_BASE}/day-customizations/${dayNumber}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+}
+
 // ── Place API (My Places) ──
 
 export interface PlaceRow {

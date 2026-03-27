@@ -245,44 +245,32 @@ export function Budget() {
 
       {/* Summary Cards */}
       <div className="grid gap-4 sm:grid-cols-3">
-        <Card className="border-border/50 shadow-sm">
-          <CardContent className="p-5">
-            <div className="flex items-center gap-3">
-              <div className="rounded-xl bg-primary/10 p-3"><Wallet className="h-5 w-5 text-primary" /></div>
-              <div>
-                <p className="text-sm text-muted-foreground">{t("budget.totalBudget")}</p>
-                <p className="text-xl font-bold">{formatTWD(totalBudget)}</p>
-              </div>
+        {[
+          { icon: Wallet, label: t("budget.totalBudget"), value: formatTWD(totalBudget), iconClass: "bg-primary/10", iconColor: "text-primary", delay: 0 },
+          { icon: TrendingUp, label: t("budget.totalSpent"), value: formatTWD(totalSpent), iconClass: "bg-chart-3/10", iconColor: "text-chart-3", delay: 1 },
+          { icon: TrendingDown, label: t("budget.remaining"), value: formatTWD(remaining), iconClass: remaining >= 0 ? "bg-primary/10" : "bg-destructive/10", iconColor: remaining >= 0 ? "text-primary" : "text-destructive", delay: 2 },
+        ].map((card, i) => {
+          const Icon = card.icon;
+          return (
+            <div key={i} className="animate-in" style={{ animationDelay: `${card.delay * 80}ms`, animationFillMode: "both" }}>
+              <Card className={cn("border-border/50 shadow-sm", i === 2 && remaining < 0 && "border-destructive/50")}>
+                <CardContent className="p-5">
+                  <div className="flex items-center gap-3">
+                    <div className={cn("rounded-xl p-3", card.iconClass)}><Icon className={cn("h-5 w-5", card.iconColor)} /></div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">{card.label}</p>
+                      <p className={cn("text-xl font-bold", i === 2 && remaining < 0 && "text-destructive")}>{card.value}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
-          </CardContent>
-        </Card>
-        <Card className="border-border/50 shadow-sm">
-          <CardContent className="p-5">
-            <div className="flex items-center gap-3">
-              <div className="rounded-xl bg-chart-3/10 p-3"><TrendingUp className="h-5 w-5 text-chart-3" /></div>
-              <div>
-                <p className="text-sm text-muted-foreground">{t("budget.totalSpent")}</p>
-                <p className="text-xl font-bold">{formatTWD(totalSpent)}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className={cn("border-border/50 shadow-sm", remaining < 0 && "border-destructive/50")}>
-          <CardContent className="p-5">
-            <div className="flex items-center gap-3">
-              <div className={cn("rounded-xl p-3", remaining >= 0 ? "bg-primary/10" : "bg-destructive/10")}>
-                <TrendingDown className={cn("h-5 w-5", remaining >= 0 ? "text-primary" : "text-destructive")} />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">{t("budget.remaining")}</p>
-                <p className={cn("text-xl font-bold", remaining < 0 && "text-destructive")}>{formatTWD(remaining)}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+          );
+        })}
       </div>
 
       {/* Overall Progress */}
+      <div className="animate-in" style={{ animationDelay: "240ms", animationFillMode: "both" }}>
       <Card className="border-border/50 shadow-sm">
         <CardContent className="p-5">
           <div className="flex items-center justify-between mb-3">
@@ -292,19 +280,22 @@ export function Budget() {
           <Progress value={spentPct} className="h-3" />
         </CardContent>
       </Card>
+      </div>
 
       {/* Category Budgets */}
+      <div className="animate-in" style={{ animationDelay: "320ms", animationFillMode: "both" }}>
       <div>
         <h2 className="text-xl font-bold tracking-tight mb-4">{t("budget.categoryBudgets")}</h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {budgets.map((b) => {
+          {budgets.map((b, idx) => {
             const Icon = categoryIcons[b.category] || Wallet;
             const spent = getSpentByCategory(b.category);
             const pct = b.budgetTWD > 0 ? Math.min((spent / b.budgetTWD) * 100, 100) : 0;
             const catRemaining = b.budgetTWD - spent;
             const isEditing = editingBudget === b.category;
             return (
-              <Card key={b.category} className="border-border/50 shadow-sm">
+              <div key={b.category} className="animate-in" style={{ animationDelay: `${400 + idx * 60}ms`, animationFillMode: "both" }}>
+              <Card className="border-border/50 shadow-sm">
                 <CardContent className="p-5 space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -343,13 +334,15 @@ export function Budget() {
                   )}
                 </CardContent>
               </Card>
+              </div>
             );
           })}
         </div>
       </div>
+      </div>
 
       {/* Expense List */}
-      <div>
+      <div className="animate-in" style={{ animationDelay: "500ms", animationFillMode: "both" }}>
         <div className="flex items-end justify-between mb-4">
           <h2 className="text-xl font-bold tracking-tight">{t("budget.expenses")}</h2>
           <Badge variant="secondary">{expenses.length} {t("budget.items")}</Badge>

@@ -118,6 +118,17 @@ class SlotOut(SlotCreate):
     created_at: Optional[str] = None
 
 
+class DayCustomizationUpdate(BaseModel):
+    title: Optional[str] = None
+    image_url: Optional[str] = None
+
+
+class DayCustomizationOut(BaseModel):
+    day_number: int
+    title: Optional[str] = None
+    image_url: Optional[str] = None
+
+
 class ChecklistItemCreate(BaseModel):
     text: str
     category: Optional[str] = None
@@ -382,6 +393,30 @@ def delete_slot(slot_id: str):
     conn.execute("DELETE FROM itinerary_slots WHERE id = ?", (slot_id,))
     conn.commit()
     conn.close()
+
+
+# ── Day customization endpoints ──────────────────────────
+
+
+@app.get("/api/day-customizations", response_model=list[DayCustomizationOut])
+def list_day_customizations():
+    conn = get_conn()
+    rows = conn.execute("SELECT day_number, title, image_url FROM day_customizations ORDER BY day_number").fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+@app.put("/api/day-customizations/{day_number}", response_model=DayCustomizationOut)
+def update_day_customization(day_number: int, body: DayCustomizationUpdate):
+    conn = get_conn()
+    conn.execute(
+        "INSERT OR REPLACE INTO day_customizations (day_number, title, image_url) VALUES (?, ?, ?)",
+        (day_number, body.title, body.image_url),
+    )
+    conn.commit()
+    row = conn.execute("SELECT day_number, title, image_url FROM day_customizations WHERE day_number = ?", (day_number,)).fetchone()
+    conn.close()
+    return dict(row)
 
 
 # ── Checklist endpoints ──────────────────────────────────

@@ -110,6 +110,14 @@ def run_migrations():
     except sqlite3.OperationalError:
         pass  # column already exists
 
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS day_customizations (
+            day_number INTEGER PRIMARY KEY,
+            title TEXT,
+            image_url TEXT
+        )
+    """)
+
     conn.commit()
     conn.close()
 

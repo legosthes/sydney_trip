@@ -33,6 +33,7 @@ const translations = {
     en: "Every stop on our Sydney adventure",
     zh: "雪梨之旅的每一站",
   },
+  "overview.seeMore": { en: "See more", zh: "查看更多" },
   "overview.places": { en: "Saved Places", zh: "已儲存景點" },
   "overview.placesDesc": {
     en: "Restaurants, cafes, and spots on our list",
@@ -80,6 +81,10 @@ const translations = {
   "itinerary.allPlaces": { en: "All Saved Places", zh: "所有已儲存景點" },
   "itinerary.unassigned": { en: "Unassigned Places", zh: "未分配景點" },
   "itinerary.allAssigned": { en: "All places assigned!", zh: "所有景點已分配！" },
+  "itinerary.changePhoto": { en: "Change photo", zh: "更換照片" },
+  "itinerary.selectPhoto": { en: "Select Day Photo", zh: "選擇每日照片" },
+  "itinerary.editTitle": { en: "Edit title", zh: "編輯標題" },
+  "itinerary.useDefault": { en: "Use default", zh: "使用預設" },
 
   // My Places
   "places.title": { en: "My Places", zh: "我的景點" },

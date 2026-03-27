@@ -16,6 +16,10 @@ import {
   GripVertical,
   PanelRightClose,
   PanelRightOpen,
+  ImageIcon,
+  PencilLine,
+  Check,
+  RotateCcw,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
@@ -34,9 +38,12 @@ import {
   getSlotsByDay,
   addSlot,
   removeSlot,
+  getAllDayCustomizations,
+  updateDayCustomization,
   type PlaceRow,
   type ItinerarySlotRow,
   type SlotType,
+  type DayCustomization,
 } from "@/lib/api";
 import { useToast } from "@/components/Toast";
 import { useTranslation } from "@/i18n/LanguageContext";
@@ -46,18 +53,40 @@ import type { TranslationKey } from "@/i18n/translations";
 
 // ── Slot constants ──
 
-const SLOT_ORDER: SlotType[] = ["breakfast", "morning", "lunch", "afternoon", "dinner", "evening"];
+const SLOT_ORDER: SlotType[] = [
+  "breakfast",
+  "morning",
+  "lunch",
+  "afternoon",
+  "dinner",
+  "evening",
+];
 const MEAL_SLOTS: SlotType[] = ["breakfast", "lunch", "dinner"];
 
 function slotMax(type: SlotType): number {
   return (MEAL_SLOTS as readonly string[]).includes(type) ? 1 : 3;
 }
 
-const SLOT_META: Record<SlotType, { icon: LucideIcon; labelKey: TranslationKey; color: string }> = {
+const SLOT_META: Record<
+  SlotType,
+  { icon: LucideIcon; labelKey: TranslationKey; color: string }
+> = {
   morning: { icon: Sun, labelKey: "itinerary.morning", color: "#f59e0b" },
-  breakfast: { icon: Coffee, labelKey: "itinerary.breakfast", color: "#8b5cf6" },
-  afternoon: { icon: CloudSun, labelKey: "itinerary.afternoon", color: "#3b82f6" },
-  lunch: { icon: UtensilsCrossed, labelKey: "itinerary.lunch", color: "#10b981" },
+  breakfast: {
+    icon: Coffee,
+    labelKey: "itinerary.breakfast",
+    color: "#8b5cf6",
+  },
+  afternoon: {
+    icon: CloudSun,
+    labelKey: "itinerary.afternoon",
+    color: "#3b82f6",
+  },
+  lunch: {
+    icon: UtensilsCrossed,
+    labelKey: "itinerary.lunch",
+    color: "#10b981",
+  },
   evening: { icon: Moon, labelKey: "itinerary.evening", color: "#6366f1" },
   dinner: { icon: Wine, labelKey: "itinerary.dinner", color: "#ef4444" },
 };
@@ -77,12 +106,16 @@ function DraggablePlaceCard({ place }: { place: PlaceRow }) {
       {...attributes}
       className={cn(
         "flex items-center gap-2 rounded-lg border border-border p-2 bg-card cursor-grab active:cursor-grabbing hover:border-primary/40 transition-colors",
-        isDragging && "opacity-30"
+        isDragging && "opacity-30",
       )}
     >
       <GripVertical className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
       {place.image_url ? (
-        <img src={place.image_url} alt="" className="h-8 w-8 rounded object-cover flex-shrink-0" />
+        <img
+          src={place.image_url}
+          alt=""
+          className="h-8 w-8 rounded object-cover flex-shrink-0"
+        />
       ) : (
         <div className="h-8 w-8 rounded bg-primary/10 flex items-center justify-center flex-shrink-0">
           <MapPin className="h-3.5 w-3.5 text-primary" />
@@ -90,7 +123,9 @@ function DraggablePlaceCard({ place }: { place: PlaceRow }) {
       )}
       <div className="min-w-0 flex-1">
         <p className="text-xs font-medium truncate">{place.name}</p>
-        {place.category && <p className="text-[10px] text-muted-foreground">{place.category}</p>}
+        {place.category && (
+          <p className="text-[10px] text-muted-foreground">{place.category}</p>
+        )}
       </div>
     </div>
   );
@@ -137,6 +172,7 @@ function DroppableSlot({
     slot: s,
     place: places.find((p) => p.id === s.place_id),
   }));
+  const isSingle = slotPlaces.length === 1;
 
   return (
     <div
@@ -144,13 +180,16 @@ function DroppableSlot({
       className={cn(
         "rounded-xl border-2 border-dashed p-3 transition-colors",
         isOver && !isFull ? "border-primary bg-primary/5" : "border-border/60",
-        isFull && isOver && "border-destructive/50"
+        isFull && isOver && "border-destructive/50",
       )}
     >
       {/* Slot header */}
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
-          <div className="rounded-lg p-1.5" style={{ backgroundColor: `${meta.color}15` }}>
+          <div
+            className="rounded-lg p-1.5"
+            style={{ backgroundColor: `${meta.color}15` }}
+          >
             <Icon className="h-3.5 w-3.5" style={{ color: meta.color }} />
           </div>
           <span className="text-xs font-semibold">{t(meta.labelKey)}</span>
@@ -171,7 +210,18 @@ function DroppableSlot({
 
       {/* Place cards */}
       {slotPlaces.length > 0 ? (
-        <div className={cn("grid gap-2", isMeal ? "grid-cols-1" : slotPlaces.length === 1 ? "grid-cols-1" : slotPlaces.length === 2 ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3")}>
+        <div
+          className={cn(
+            "grid gap-2",
+            isMeal
+              ? "grid-cols-1"
+              : slotPlaces.length === 1
+                ? "grid-cols-1"
+                : slotPlaces.length === 2
+                  ? "grid-cols-1 sm:grid-cols-2"
+                  : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3",
+          )}
+        >
           {slotPlaces.map(({ slot, place }) =>
             place ? (
               <div
@@ -179,29 +229,74 @@ function DroppableSlot({
                 onClick={() => onFocusLocation(place.name)}
                 className={cn(
                   "group relative flex flex-col rounded-lg border bg-card cursor-pointer transition-all hover:shadow-sm overflow-hidden",
-                  focusedLocation === place.name ? "border-primary ring-1 ring-primary/30" : "border-border/50"
+                  focusedLocation === place.name
+                    ? "border-primary ring-1 ring-primary/30"
+                    : "border-border/50",
                 )}
-                style={{ minHeight: "236px" }}
+                style={{ minHeight: isSingle ? undefined : "236px" }}
               >
                 {/* Image area */}
                 {place.image_url ? (
-                  <div className="h-28 w-full overflow-hidden flex-shrink-0">
-                    <img src={place.image_url} alt="" className="h-full w-full object-cover" />
+                  <div
+                    className={cn(
+                      "w-full overflow-hidden flex-shrink-0",
+                      isSingle ? "h-36" : "h-28",
+                    )}
+                  >
+                    <img
+                      src={place.image_url}
+                      alt=""
+                      className="h-full w-full object-cover"
+                    />
                   </div>
                 ) : (
-                  <div className="h-28 w-full bg-primary/5 flex items-center justify-center flex-shrink-0">
+                  <div
+                    className={cn(
+                      "w-full bg-primary/5 flex items-center justify-center flex-shrink-0",
+                      isSingle ? "h-36" : "h-28",
+                    )}
+                  >
                     <MapPin className="h-8 w-8 text-primary/30" />
                   </div>
                 )}
                 {/* Info area */}
-                <div className="flex-1 p-3 flex flex-col justify-between">
+                <div
+                  className={cn(
+                    "flex-1 flex flex-col justify-between",
+                    isSingle ? "p-4" : "p-3",
+                  )}
+                >
                   <div>
-                    <p className="text-xs font-semibold leading-tight">{place.name}</p>
+                    <p
+                      className={cn(
+                        "font-semibold leading-tight",
+                        isSingle ? "text-lg" : "text-xs",
+                      )}
+                    >
+                      {place.name}
+                    </p>
                     {place.category && (
-                      <Badge variant="secondary" className="text-[9px] mt-1">{place.category}</Badge>
+                      <Badge
+                        variant="secondary"
+                        className={cn(
+                          "mt-1",
+                          isSingle ? "text-[10px]" : "text-[9px]",
+                        )}
+                      >
+                        {place.category}
+                      </Badge>
                     )}
                     {place.notes && (
-                      <p className="text-[10px] text-muted-foreground mt-1 line-clamp-2">{place.notes}</p>
+                      <p
+                        className={cn(
+                          "text-muted-foreground mt-1",
+                          isSingle
+                            ? "text-xs line-clamp-3"
+                            : "text-[10px] line-clamp-2",
+                        )}
+                      >
+                        {place.notes}
+                      </p>
                     )}
                   </div>
                   <div className="flex items-center gap-1.5 mt-2">
@@ -211,9 +306,18 @@ function DroppableSlot({
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={(e) => e.stopPropagation()}
-                        className="inline-flex items-center gap-0.5 text-[10px] text-muted-foreground hover:text-primary"
+                        className={cn(
+                          "inline-flex items-center gap-0.5 text-muted-foreground hover:text-primary",
+                          isSingle ? "text-xs" : "text-[10px]",
+                        )}
                       >
-                        <MapPin className="h-2.5 w-2.5" /> Map <ExternalLink className="h-2 w-2" />
+                        <MapPin
+                          className={cn(isSingle ? "h-3 w-3" : "h-2.5 w-2.5")}
+                        />{" "}
+                        Map{" "}
+                        <ExternalLink
+                          className={cn(isSingle ? "h-2.5 w-2.5" : "h-2 w-2")}
+                        />
                       </a>
                     )}
                   </div>
@@ -221,13 +325,16 @@ function DroppableSlot({
                 {/* Remove button */}
                 <button
                   type="button"
-                  onClick={(e) => { e.stopPropagation(); onRemove(slot.id); }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onRemove(slot.id);
+                  }}
                   className="absolute top-1.5 right-1.5 hidden group-hover:flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-white text-[10px] shadow-sm"
                 >
                   <X className="h-3 w-3" />
                 </button>
               </div>
-            ) : null
+            ) : null,
           )}
         </div>
       ) : (
@@ -255,14 +362,27 @@ export function Itinerary() {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeDragPlace, setActiveDragPlace] = useState<PlaceRow | null>(null);
+  const [dayCustomizations, setDayCustomizations] = useState<
+    DayCustomization[]
+  >([]);
+  const [photoPickerOpen, setPhotoPickerOpen] = useState(false);
+  const [editingTitle, setEditingTitle] = useState(false);
+  const [titleDraft, setTitleDraft] = useState("");
+  const [animateDay, setAnimateDay] = useState(false);
+  const [hasMounted, setHasMounted] = useState(false);
 
   const dayNumber = selectedDay + 1;
 
-  // Fetch all places once
+  // Fetch all places + day customizations once
   useEffect(() => {
-    getAllPlaces().then((rows) => {
-      setAllPlaces(rows);
+    Promise.all([
+      getAllPlaces(),
+      getAllDayCustomizations().catch(() => [] as DayCustomization[]),
+    ]).then(([places, customs]) => {
+      setAllPlaces(places);
+      setDayCustomizations(customs);
       setLoading(false);
+      setHasMounted(true);
     });
   }, []);
 
@@ -270,7 +390,52 @@ export function Itinerary() {
   useEffect(() => {
     getSlotsByDay(dayNumber).then(setDaySlots);
     setFocusedLocation(null);
-  }, [dayNumber]);
+    setEditingTitle(false);
+    if (hasMounted) {
+      setAnimateDay(true);
+      const timeout = setTimeout(() => setAnimateDay(false), 500);
+      return () => clearTimeout(timeout);
+    }
+  }, [dayNumber, hasMounted]);
+
+  // Get current day's customization
+  const currentCustom = dayCustomizations.find(
+    (c) => c.day_number === dayNumber,
+  );
+  const dayTitle = currentCustom?.title || itinerary[selectedDay].title;
+  const dayImage = currentCustom?.image_url || itinerary[selectedDay].image;
+
+  // Places in current day's slots (for photo picker)
+  const slotPlacesWithImages = useMemo(() => {
+    return daySlots
+      .map((s) => allPlaces.find((p) => p.id === s.place_id))
+      .filter((p): p is PlaceRow => !!p && !!p.image_url);
+  }, [daySlots, allPlaces]);
+
+  const handleSaveTitle = async () => {
+    const newTitle = titleDraft.trim() || null;
+    const updated = await updateDayCustomization(dayNumber, {
+      title: newTitle,
+      image_url: currentCustom?.image_url ?? null,
+    });
+    setDayCustomizations((prev) => {
+      const filtered = prev.filter((c) => c.day_number !== dayNumber);
+      return [...filtered, updated];
+    });
+    setEditingTitle(false);
+  };
+
+  const handleSelectPhoto = async (imageUrl: string | null) => {
+    const updated = await updateDayCustomization(dayNumber, {
+      title: currentCustom?.title ?? null,
+      image_url: imageUrl,
+    });
+    setDayCustomizations((prev) => {
+      const filtered = prev.filter((c) => c.day_number !== dayNumber);
+      return [...filtered, updated];
+    });
+    setPhotoPickerOpen(false);
+  };
 
   // Map URL
   const mapUrl = useMemo(() => {
@@ -283,7 +448,10 @@ export function Itinerary() {
       .filter(Boolean);
     if (placeNames.length === 0) {
       // Fallback: show day's first location from static data
-      const locs = itinerary[selectedDay]?.activities?.filter((a) => a.location).map((a) => a.location!) || [];
+      const locs =
+        itinerary[selectedDay]?.activities
+          ?.filter((a) => a.location)
+          .map((a) => a.location!) || [];
       if (locs.length === 0) return null;
       return `https://maps.google.com/maps?q=${encodeURIComponent(locs.join(", ") + ", Sydney")}&output=embed&z=12`;
     }
@@ -312,7 +480,7 @@ export function Itinerary() {
         toast(t("toast.slotFull"), "deleted");
       }
     },
-    [dayNumber, daySlots, toast, t]
+    [dayNumber, daySlots, toast, t],
   );
 
   // Remove place from slot
@@ -322,7 +490,7 @@ export function Itinerary() {
       await removeSlot(slotId);
       toast(t("toast.slotRemoved"), "deleted");
     },
-    [toast, t]
+    [toast, t],
   );
 
   // Open picker
@@ -351,26 +519,35 @@ export function Itinerary() {
 
   // Unassigned places (not in current day's slots)
   const unassignedPlaces = allPlaces.filter(
-    (p) => !daySlots.some((s) => s.place_id === p.id)
+    (p) => !daySlots.some((s) => s.place_id === p.id),
   );
 
   // Unique categories from all places
-  const placeCategories = ["All", ...Array.from(new Set(allPlaces.map((p) => p.category).filter(Boolean) as string[]))];
+  const placeCategories = [
+    "All",
+    ...Array.from(
+      new Set(allPlaces.map((p) => p.category).filter(Boolean) as string[]),
+    ),
+  ];
 
   // Filtered unassigned for sidebar
   const filteredUnassigned = unassignedPlaces.filter((p) => {
-    const matchesSearch = !searchTerm ||
+    const matchesSearch =
+      !searchTerm ||
       p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       p.category?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === "All" || p.category === selectedCategory;
+    const matchesCategory =
+      selectedCategory === "All" || p.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
   // Filtered places for picker modal (all places, not just unassigned)
   const pickerPlaces = allPlaces.filter((p) => {
     if (!searchTerm) return true;
-    return p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.category?.toLowerCase().includes(searchTerm.toLowerCase());
+    return (
+      p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      p.category?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
   });
 
   if (loading) {
@@ -386,49 +563,138 @@ export function Itinerary() {
       <div className="pb-20">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold tracking-tight">{t("itinerary.title")}</h1>
-          <p className="text-muted-foreground mt-1">{t("itinerary.subtitle")}</p>
+          <h1 className="text-3xl font-bold tracking-tight">
+            {t("itinerary.title")}
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            {t("itinerary.subtitle")}
+          </p>
         </div>
 
         {/* Day Selector */}
         <div className="mb-8">
           <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-            {itinerary.map((day, i) => (
-              <button
-                key={day.dayLabel}
-                onClick={() => setSelectedDay(i)}
-                className={cn(
-                  "flex-shrink-0 rounded-2xl border px-5 py-3 text-left transition-all",
-                  selectedDay === i
-                    ? "border-primary bg-primary text-primary-foreground shadow-md"
-                    : "border-border bg-card hover:border-primary/40 hover:bg-secondary"
-                )}
-              >
-                <p className={cn("text-xs font-medium", selectedDay === i ? "text-primary-foreground/70" : "text-muted-foreground")}>{day.date}</p>
-                <p className="font-semibold text-sm mt-0.5">{day.dayLabel}</p>
-              </button>
-            ))}
+            {itinerary.map((day, i) => {
+              const custom = dayCustomizations.find(
+                (c) => c.day_number === i + 1,
+              );
+              return (
+                <button
+                  key={day.dayLabel}
+                  onClick={() => setSelectedDay(i)}
+                  className={cn(
+                    "flex-shrink-0 rounded-2xl border px-5 py-3 text-left transition-all duration-300",
+                    selectedDay === i
+                      ? "border-primary bg-primary text-primary-foreground shadow-md scale-[1.02]"
+                      : "border-border bg-card hover:border-primary/40 hover:bg-secondary hover:scale-[1.01]",
+                  )}
+                >
+                  <p
+                    className={cn(
+                      "text-xs font-medium",
+                      selectedDay === i
+                        ? "text-primary-foreground/70"
+                        : "text-muted-foreground",
+                    )}
+                  >
+                    {day.date}
+                  </p>
+                  <p className="font-semibold text-sm mt-0.5">
+                    {custom?.title || day.title}
+                  </p>
+                </button>
+              );
+            })}
           </div>
         </div>
 
         {/* 3-column layout: [Photo+Map | Slots | Unassigned Sidebar] */}
-        <div className={cn("grid gap-5", sidebarOpen ? "lg:grid-cols-[1fr_1.5fr_260px]" : "lg:grid-cols-[1fr_1.5fr_40px]")}>
-          {/* Left column: Photo + Map */}
-          <div className="space-y-3">
+        <div
+          className={cn(
+            "grid gap-5",
+            sidebarOpen
+              ? "lg:grid-cols-[1fr_1.5fr_260px]"
+              : "lg:grid-cols-[1fr_1.5fr_40px]",
+          )}
+        >
+          {/* Left column: Photo + Map — sticky */}
+          <div
+            className={cn(
+              "lg:sticky lg:top-20 lg:self-start space-y-3 transition-all duration-400 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto lg:scrollbar-hide",
+              animateDay
+                ? "opacity-0 translate-y-2"
+                : "opacity-100 translate-y-0",
+            )}
+          >
             {/* Day photo */}
-            <div className="relative overflow-hidden rounded-2xl">
+            <div className="group/photo relative overflow-hidden rounded-2xl">
               <img
-                src={itinerary[selectedDay].image}
-                alt={itinerary[selectedDay].title}
-                className="aspect-[4/3] w-full object-cover"
+                src={dayImage}
+                alt={dayTitle}
+                className="aspect-[4/3] w-full object-cover transition-transform duration-700 group-hover/photo:scale-[1.02]"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-              <div className="absolute bottom-0 p-5">
+              {/* Photo change button */}
+              {slotPlacesWithImages.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setPhotoPickerOpen(true)}
+                  className="absolute top-3 right-3 opacity-0 group-hover/photo:opacity-100 transition-opacity inline-flex items-center gap-1.5 rounded-full bg-black/50 backdrop-blur-sm text-white px-3 py-1.5 text-xs font-medium hover:bg-black/70"
+                >
+                  <ImageIcon className="h-3 w-3" /> {t("itinerary.changePhoto")}
+                </button>
+              )}
+              <div className="absolute bottom-0 p-5 w-full">
                 <Badge className="mb-2 bg-white/20 text-white backdrop-blur-sm border-white/30">
                   {itinerary[selectedDay].dayLabel}
                 </Badge>
-                <h2 className="text-xl font-bold text-white">{itinerary[selectedDay].title}</h2>
-                <p className="text-white/70 text-sm mt-1">{itinerary[selectedDay].date}</p>
+                {editingTitle ? (
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={titleDraft}
+                      onChange={(e) => setTitleDraft(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") handleSaveTitle();
+                        if (e.key === "Escape") setEditingTitle(false);
+                      }}
+                      autoFocus
+                      className="bg-transparent border-b-2 border-white/60 text-xl font-bold text-white outline-none placeholder:text-white/40 w-full"
+                      placeholder={itinerary[selectedDay].title}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleSaveTitle}
+                      className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-white/20 text-white hover:bg-white/30"
+                    >
+                      <Check className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setEditingTitle(false)}
+                      className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-white/20 text-white hover:bg-white/30"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="group/title flex items-center gap-2">
+                    <h2 className="text-xl font-bold text-white">{dayTitle}</h2>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTitleDraft(dayTitle);
+                        setEditingTitle(true);
+                      }}
+                      className="opacity-0 group-hover/title:opacity-100 transition-opacity inline-flex h-6 w-6 items-center justify-center rounded-full bg-white/20 text-white hover:bg-white/30"
+                    >
+                      <PencilLine className="h-3 w-3" />
+                    </button>
+                  </div>
+                )}
+                <p className="text-white/70 text-sm mt-1">
+                  {itinerary[selectedDay].date}
+                </p>
               </div>
             </div>
 
@@ -471,20 +737,36 @@ export function Itinerary() {
           </div>
 
           {/* Center column: Slot Timeline */}
-          <div className="space-y-3">
-            {SLOT_ORDER.map((slotType) => (
-              <DroppableSlot
+          <div
+            className={cn(
+              "space-y-3 transition-all duration-400",
+              animateDay
+                ? "opacity-0 translate-y-2"
+                : "opacity-100 translate-y-0",
+            )}
+          >
+            {SLOT_ORDER.map((slotType, i) => (
+              <div
                 key={slotType}
-                slotType={slotType}
-                dayNumber={dayNumber}
-                slots={daySlots}
-                places={allPlaces}
-                onRemove={handleRemoveSlot}
-                onOpenPicker={openPicker}
-                onFocusLocation={setFocusedLocation}
-                focusedLocation={focusedLocation}
-                t={t}
-              />
+                className="animate-in fade-in slide-in-from-bottom-2"
+                style={{
+                  animationDelay: `${i * 60}ms`,
+                  animationFillMode: "both",
+                  animationDuration: "400ms",
+                }}
+              >
+                <DroppableSlot
+                  slotType={slotType}
+                  dayNumber={dayNumber}
+                  slots={daySlots}
+                  places={allPlaces}
+                  onRemove={handleRemoveSlot}
+                  onOpenPicker={openPicker}
+                  onFocusLocation={setFocusedLocation}
+                  focusedLocation={focusedLocation}
+                  t={t}
+                />
+              </div>
             ))}
           </div>
 
@@ -495,10 +777,15 @@ export function Itinerary() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <MapPinned className="h-3.5 w-3.5 text-primary" />
-                    <h3 className="font-semibold text-xs">{t("itinerary.unassigned")}</h3>
+                    <h3 className="font-semibold text-xs">
+                      {t("itinerary.unassigned")}
+                    </h3>
                   </div>
                   <div className="flex items-center gap-1">
-                    <Link to="/places" className="text-[10px] text-primary hover:underline no-underline">
+                    <Link
+                      to="/places"
+                      className="text-[10px] text-primary hover:underline no-underline"
+                    >
                       {t("itinerary.viewAll")}
                     </Link>
                     <button
@@ -536,7 +823,7 @@ export function Itinerary() {
                           "rounded-full px-2 py-0.5 text-[10px] font-medium transition-colors border",
                           selectedCategory === cat
                             ? "bg-primary text-primary-foreground border-primary"
-                            : "border-border hover:bg-secondary text-foreground"
+                            : "border-border hover:bg-secondary text-foreground",
                         )}
                       >
                         {cat}
@@ -545,18 +832,26 @@ export function Itinerary() {
                   </div>
                 )}
 
-                <p className="text-[10px] text-muted-foreground">{t("itinerary.dragHint")}</p>
+                <p className="text-[10px] text-muted-foreground">
+                  {t("itinerary.dragHint")}
+                </p>
 
                 <div className="space-y-2 max-h-[calc(100vh-300px)] overflow-y-auto pr-1">
                   {filteredUnassigned.length > 0 ? (
-                    filteredUnassigned.map((p) => <DraggablePlaceCard key={p.id} place={p} />)
+                    filteredUnassigned.map((p) => (
+                      <DraggablePlaceCard key={p.id} place={p} />
+                    ))
                   ) : unassignedPlaces.length === 0 ? (
                     <div className="rounded-lg border border-dashed border-border/60 py-6 text-center">
-                      <p className="text-[10px] text-muted-foreground">{t("itinerary.allAssigned")}</p>
+                      <p className="text-[10px] text-muted-foreground">
+                        {t("itinerary.allAssigned")}
+                      </p>
                     </div>
                   ) : (
                     <div className="rounded-lg border border-dashed border-border/60 py-6 text-center">
-                      <p className="text-[10px] text-muted-foreground">{t("places.noPlaces")}</p>
+                      <p className="text-[10px] text-muted-foreground">
+                        {t("places.noPlaces")}
+                      </p>
                     </div>
                   )}
                 </div>
@@ -580,19 +875,130 @@ export function Itinerary() {
           </div>
         </div>
 
+        {/* Photo Picker Modal */}
+        {photoPickerOpen && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center"
+            role="dialog"
+          >
+            <div
+              className="absolute inset-0 bg-black/30 backdrop-blur-xs"
+              onClick={() => setPhotoPickerOpen(false)}
+              role="presentation"
+            />
+            <div
+              className="relative z-10 w-full max-w-lg mx-4 rounded-xl bg-popover p-6 shadow-xl ring-1 ring-foreground/10 max-h-[80vh] flex flex-col"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-base font-semibold">
+                  {t("itinerary.selectPhoto")}
+                </h2>
+                <button
+                  type="button"
+                  onClick={() => setPhotoPickerOpen(false)}
+                  className="inline-flex h-7 w-7 items-center justify-center rounded-md hover:bg-muted transition-colors"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto space-y-2">
+                {/* Default photo option */}
+                <button
+                  type="button"
+                  onClick={() => handleSelectPhoto(null)}
+                  className={cn(
+                    "w-full flex items-center gap-3 rounded-lg border p-3 text-left transition-colors hover:border-primary/40 hover:bg-secondary",
+                    !currentCustom?.image_url
+                      ? "border-primary ring-1 ring-primary/30"
+                      : "border-border",
+                  )}
+                >
+                  <img
+                    src={itinerary[selectedDay].image}
+                    alt=""
+                    className="h-14 w-20 rounded-md object-cover flex-shrink-0"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium">
+                      {t("itinerary.useDefault")}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {itinerary[selectedDay].title}
+                    </p>
+                  </div>
+                  {!currentCustom?.image_url && (
+                    <Check className="h-4 w-4 text-primary flex-shrink-0" />
+                  )}
+                </button>
+                {/* Places with images */}
+                {slotPlacesWithImages.map((place) => (
+                  <button
+                    key={place.id}
+                    type="button"
+                    onClick={() => handleSelectPhoto(place.image_url)}
+                    className={cn(
+                      "w-full flex items-center gap-3 rounded-lg border p-3 text-left transition-colors hover:border-primary/40 hover:bg-secondary",
+                      currentCustom?.image_url === place.image_url
+                        ? "border-primary ring-1 ring-primary/30"
+                        : "border-border",
+                    )}
+                  >
+                    <img
+                      src={place.image_url!}
+                      alt=""
+                      className="h-14 w-20 rounded-md object-cover flex-shrink-0"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium truncate">
+                        {place.name}
+                      </p>
+                      {place.category && (
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {place.category}
+                        </p>
+                      )}
+                    </div>
+                    {currentCustom?.image_url === place.image_url && (
+                      <Check className="h-4 w-4 text-primary flex-shrink-0" />
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Place Picker Modal */}
         {pickerOpen && pickerSlotType && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center" role="dialog">
-            <div className="absolute inset-0 bg-black/30 backdrop-blur-xs" onClick={() => setPickerOpen(false)} role="presentation" />
-            <div className="relative z-10 w-full max-w-lg mx-4 rounded-xl bg-popover p-6 shadow-xl ring-1 ring-foreground/10 max-h-[80vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center"
+            role="dialog"
+          >
+            <div
+              className="absolute inset-0 bg-black/30 backdrop-blur-xs"
+              onClick={() => setPickerOpen(false)}
+              role="presentation"
+            />
+            <div
+              className="relative z-10 w-full max-w-lg mx-4 rounded-xl bg-popover p-6 shadow-xl ring-1 ring-foreground/10 max-h-[80vh] flex flex-col"
+              onClick={(e) => e.stopPropagation()}
+            >
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h2 className="text-base font-semibold">{t("itinerary.pickPlace")}</h2>
+                  <h2 className="text-base font-semibold">
+                    {t("itinerary.pickPlace")}
+                  </h2>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    {t(SLOT_META[pickerSlotType].labelKey)} — {itinerary[selectedDay].dayLabel}
+                    {t(SLOT_META[pickerSlotType].labelKey)} —{" "}
+                    {itinerary[selectedDay].dayLabel}
                   </p>
                 </div>
-                <button type="button" onClick={() => setPickerOpen(false)} className="inline-flex h-7 w-7 items-center justify-center rounded-md hover:bg-muted transition-colors">
+                <button
+                  type="button"
+                  onClick={() => setPickerOpen(false)}
+                  className="inline-flex h-7 w-7 items-center justify-center rounded-md hover:bg-muted transition-colors"
+                >
                   <X className="h-4 w-4" />
                 </button>
               </div>
@@ -613,11 +1019,15 @@ export function Itinerary() {
               {/* Place list */}
               <div className="flex-1 overflow-y-auto space-y-2">
                 {pickerPlaces.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-8">{t("places.noPlaces")}</p>
+                  <p className="text-sm text-muted-foreground text-center py-8">
+                    {t("places.noPlaces")}
+                  </p>
                 ) : (
                   pickerPlaces.map((place) => {
                     const alreadyInSlot = daySlots.some(
-                      (s) => s.slot_type === pickerSlotType && s.place_id === place.id
+                      (s) =>
+                        s.slot_type === pickerSlotType &&
+                        s.place_id === place.id,
                     );
                     return (
                       <button
@@ -632,28 +1042,43 @@ export function Itinerary() {
                           "w-full flex items-center gap-3 rounded-lg border p-3 text-left transition-colors",
                           alreadyInSlot
                             ? "border-border/30 bg-muted/50 opacity-50 cursor-not-allowed"
-                            : "border-border hover:border-primary/40 hover:bg-secondary cursor-pointer"
+                            : "border-border hover:border-primary/40 hover:bg-secondary cursor-pointer",
                         )}
                       >
                         {place.image_url ? (
-                          <img src={place.image_url} alt="" className="h-10 w-10 rounded-md object-cover flex-shrink-0" />
+                          <img
+                            src={place.image_url}
+                            alt=""
+                            className="h-10 w-10 rounded-md object-cover flex-shrink-0"
+                          />
                         ) : (
                           <div className="h-10 w-10 rounded-md bg-primary/10 flex items-center justify-center flex-shrink-0">
                             <MapPin className="h-4 w-4 text-primary" />
                           </div>
                         )}
                         <div className="min-w-0 flex-1">
-                          <p className="text-sm font-medium truncate">{place.name}</p>
+                          <p className="text-sm font-medium truncate">
+                            {place.name}
+                          </p>
                           <div className="flex items-center gap-1.5 mt-0.5">
                             {place.category && (
-                              <Badge variant="secondary" className="text-[10px]">{place.category}</Badge>
+                              <Badge
+                                variant="secondary"
+                                className="text-[10px]"
+                              >
+                                {place.category}
+                              </Badge>
                             )}
                             {alreadyInSlot && (
-                              <span className="text-[10px] text-muted-foreground">Already added</span>
+                              <span className="text-[10px] text-muted-foreground">
+                                Already added
+                              </span>
                             )}
                           </div>
                         </div>
-                        {!alreadyInSlot && <Plus className="h-4 w-4 text-primary flex-shrink-0" />}
+                        {!alreadyInSlot && (
+                          <Plus className="h-4 w-4 text-primary flex-shrink-0" />
+                        )}
                       </button>
                     );
                   })
@@ -661,7 +1086,11 @@ export function Itinerary() {
               </div>
 
               <div className="mt-3 pt-3 border-t">
-                <Link to="/places" className="text-xs text-primary hover:underline no-underline" onClick={() => setPickerOpen(false)}>
+                <Link
+                  to="/places"
+                  className="text-xs text-primary hover:underline no-underline"
+                  onClick={() => setPickerOpen(false)}
+                >
                   {t("places.addPlace")} →
                 </Link>
               </div>
@@ -674,13 +1103,19 @@ export function Itinerary() {
           {activeDragPlace && (
             <div className="flex items-center gap-2 rounded-lg border border-primary bg-card p-2 shadow-lg opacity-90 w-48">
               {activeDragPlace.image_url ? (
-                <img src={activeDragPlace.image_url} alt="" className="h-8 w-8 rounded object-cover" />
+                <img
+                  src={activeDragPlace.image_url}
+                  alt=""
+                  className="h-8 w-8 rounded object-cover"
+                />
               ) : (
                 <div className="h-8 w-8 rounded bg-primary/10 flex items-center justify-center">
                   <MapPin className="h-3.5 w-3.5 text-primary" />
                 </div>
               )}
-              <p className="text-xs font-medium truncate">{activeDragPlace.name}</p>
+              <p className="text-xs font-medium truncate">
+                {activeDragPlace.name}
+              </p>
             </div>
           )}
         </DragOverlay>

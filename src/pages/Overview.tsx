@@ -17,7 +17,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { tripInfo, itinerary } from "@/data/trip";
-import { getAllAttractions, getAllPlaces, type AttractionRow, type PlaceRow } from "@/lib/api";
+import { getAllAttractions, getAllPlaces, getAllDayCustomizations, getAllSlots, type AttractionRow, type PlaceRow, type DayCustomization, type ItinerarySlotRow } from "@/lib/api";
+
+const PLACES_PREVIEW_LIMIT = 6;
 import { useBudget } from "@/hooks/useBudget";
 import { useTranslation } from "@/i18n/LanguageContext";
 import { CATEGORY_COLORS } from "@/data/budget";
@@ -31,6 +33,8 @@ export function Overview() {
   const { t } = useTranslation();
   const [attractions, setAttractions] = useState<AttractionRow[]>([]);
   const [places, setPlaces] = useState<PlaceRow[]>([]);
+  const [dayCustomizations, setDayCustomizations] = useState<DayCustomization[]>([]);
+  const [allSlots, setAllSlots] = useState<ItinerarySlotRow[]>([]);
   const { budgets, getSpentByCategory, totalBudget, totalSpent } = useBudget();
 
   useEffect(() => {
@@ -40,6 +44,12 @@ export function Overview() {
     });
     getAllPlaces().then((rows) => {
       if (!cancelled) setPlaces(rows);
+    });
+    getAllDayCustomizations().catch(() => [] as DayCustomization[]).then((rows) => {
+      if (!cancelled) setDayCustomizations(rows);
+    });
+    getAllSlots().catch(() => [] as ItinerarySlotRow[]).then((rows) => {
+      if (!cancelled) setAllSlots(rows);
     });
     return () => { cancelled = true; };
   }, []);
@@ -269,49 +279,70 @@ export function Overview() {
           </div>
       </section>
 
-      {/* All Attractions */}
-      {attractions.length > 4 && (
+      {/* Itinerary Overview — horizontal slider */}
+      {allSlots.length > 0 && (
         <section>
-          <div className="mb-6">
-            <h2 className="text-2xl font-bold tracking-tight">{t("overview.allAttractions")}</h2>
-            <p className="text-muted-foreground">{t("overview.allAttractionsDesc")}</p>
+          <div className="mb-6 flex items-end justify-between">
+            <div>
+              <h2 className="text-2xl font-bold tracking-tight">{t("overview.journey")}</h2>
+              <p className="text-muted-foreground">{t("overview.journeyDesc")}</p>
+            </div>
+            <Link to="/itinerary" className="text-sm font-medium text-primary hover:underline no-underline flex items-center gap-1">
+              {t("overview.seeAll")} <ArrowRight className="h-3 w-3" />
+            </Link>
           </div>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-            {attractions.map((a) => (
-              <Card key={a.id} className="group overflow-hidden border-border/50 shadow-sm hover:shadow-md transition-all hover:-translate-y-0.5 py-0">
-                <div className="relative h-28 w-full overflow-hidden">
-                  <img
-                    src={a.image_url || "https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?w=400&q=80"}
-                    alt={a.name}
-                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-                  <div className="absolute bottom-2 left-3 flex gap-1.5">
-                    {a.tag && (
-                      <Badge className="bg-white/90 text-foreground border-0 text-[10px]">{a.tag}</Badge>
-                    )}
-                    {a.day_label && (
-                      <Badge className="bg-primary/80 text-white border-0 text-[10px]">{a.day_label}</Badge>
-                    )}
-                  </div>
-                </div>
-                <CardContent className="p-3">
-                  <div className="flex items-center justify-between gap-1">
-                    <p className="font-semibold text-xs truncate">{a.name}</p>
-                    {a.maps_url && (
-                      <a href={a.maps_url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary flex-shrink-0">
-                        <ExternalLink className="h-3 w-3" />
-                      </a>
-                    )}
-                  </div>
-                  {a.location && (
-                    <p className="text-[10px] text-muted-foreground mt-0.5 flex items-center gap-1">
-                      <MapPin className="h-2.5 w-2.5" /> {a.location}
-                    </p>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
+          <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory">
+            {itinerary.map((day, i) => {
+              const dayNum = i + 1;
+              const custom = dayCustomizations.find((c) => c.day_number === dayNum);
+              const daySlotItems = allSlots.filter((s) => s.day_number === dayNum);
+              const dayPlaces = daySlotItems
+                .map((s) => places.find((p) => p.id === s.place_id))
+                .filter(Boolean) as PlaceRow[];
+              return (
+                <Link key={day.dayLabel} to="/itinerary" className="no-underline snap-start flex-shrink-0 w-[280px] sm:w-[320px]">
+                  <Card className="h-full overflow-hidden border-border/50 shadow-sm hover:shadow-md transition-all hover:-translate-y-0.5 py-0">
+                    <div className="relative h-36 w-full overflow-hidden">
+                      <img
+                        src={custom?.image_url || day.image}
+                        alt={custom?.title || day.title}
+                        className="h-full w-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                      <div className="absolute bottom-0 p-4">
+                        <Badge className="mb-1.5 bg-white/20 text-white backdrop-blur-sm border-white/30 text-[10px]">
+                          {day.dayLabel} · {day.date}
+                        </Badge>
+                        <p className="font-bold text-white text-sm">{custom?.title || day.title}</p>
+                      </div>
+                    </div>
+                    <CardContent className="p-3">
+                      {dayPlaces.length > 0 ? (
+                        <div className="space-y-1.5">
+                          {dayPlaces.slice(0, 4).map((p) => (
+                            <div key={p.id} className="flex items-center gap-2">
+                              {p.image_url ? (
+                                <img src={p.image_url} alt="" className="h-6 w-6 rounded object-cover flex-shrink-0" />
+                              ) : (
+                                <div className="h-6 w-6 rounded bg-primary/10 flex items-center justify-center flex-shrink-0">
+                                  <MapPin className="h-3 w-3 text-primary" />
+                                </div>
+                              )}
+                              <p className="text-xs truncate">{p.name}</p>
+                            </div>
+                          ))}
+                          {dayPlaces.length > 4 && (
+                            <p className="text-[10px] text-muted-foreground">+{dayPlaces.length - 4} more</p>
+                          )}
+                        </div>
+                      ) : (
+                        <p className="text-xs text-muted-foreground italic">No places planned yet</p>
+                      )}
+                    </CardContent>
+                  </Card>
+                </Link>
+              );
+            })}
           </div>
         </section>
       )}
@@ -329,7 +360,7 @@ export function Overview() {
             </Link>
           </div>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {sortedPlaces.map((p) => (
+            {sortedPlaces.slice(0, PLACES_PREVIEW_LIMIT).map((p) => (
               <Card key={p.id} className="group overflow-hidden border-border/50 shadow-sm hover:shadow-md transition-all hover:-translate-y-0.5 py-0">
                 {p.image_url ? (
                   <div className="relative h-36 w-full overflow-hidden">
@@ -374,39 +405,18 @@ export function Overview() {
               </Card>
             ))}
           </div>
+          {sortedPlaces.length > PLACES_PREVIEW_LIMIT && (
+            <div className="mt-4 flex justify-center">
+              <Link to="/places">
+                <Button variant="outline" className="rounded-full">
+                  {t("overview.seeMore")} ({sortedPlaces.length - PLACES_PREVIEW_LIMIT} more) <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </Link>
+            </div>
+          )}
         </section>
       )}
 
-      {/* Journey Preview */}
-      <section>
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold tracking-tight">{t("overview.journey")}</h2>
-          <p className="text-muted-foreground">{t("overview.journeyDesc")}</p>
-        </div>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-          {itinerary.map((day) => (
-            <Link key={day.dayLabel} to="/itinerary" className="no-underline">
-              <Card className="group h-full overflow-hidden border-border/50 shadow-sm hover:shadow-md transition-all hover:-translate-y-0.5 py-0">
-                <div className="relative h-32 w-full overflow-hidden">
-                  <img
-                    src={day.image}
-                    alt={day.title}
-                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-                  <Badge className="absolute bottom-3 left-3 bg-white/90 text-foreground border-0 font-bold text-xs">
-                    {day.dayLabel}
-                  </Badge>
-                </div>
-                <CardContent className="p-4">
-                  <p className="font-semibold text-sm text-foreground">{day.title}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{day.date}</p>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
-        </div>
-      </section>
     </div>
   );
 }
