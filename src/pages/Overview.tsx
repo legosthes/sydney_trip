@@ -489,7 +489,7 @@ export function Overview() {
               const dayPlacesAll = daySlotItems
                 .map((s) => places.find((p) => p.id === s.place_id))
                 .filter(Boolean) as PlaceRow[];
-              const seen = new Set<number>();
+              const seen = new Set<string>();
               const dayPlaces = dayPlacesAll.filter((p) => {
                 if (seen.has(p.id)) return false;
                 seen.add(p.id);

@@ -6,12 +6,13 @@ let _fetchPromise: Promise<number> | null = null;
 export async function fetchAudToTwdRate(): Promise<number> {
   if (_cachedRate !== null) return _cachedRate;
   if (_fetchPromise) return _fetchPromise;
-  _fetchPromise = (async () => {
+  _fetchPromise = (async (): Promise<number> => {
     try {
       const res = await fetch("https://open.er-api.com/v6/latest/AUD");
       const data = await res.json();
-      _cachedRate = data.rates?.TWD ?? AUD_TO_TWD_FALLBACK;
-      return _cachedRate;
+      const rate: number = data.rates?.TWD ?? AUD_TO_TWD_FALLBACK;
+      _cachedRate = rate;
+      return rate;
     } catch {
       _cachedRate = AUD_TO_TWD_FALLBACK;
       return AUD_TO_TWD_FALLBACK;

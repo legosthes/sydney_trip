@@ -730,7 +730,7 @@ export function Itinerary() {
           <div
             className="space-y-3"
           >
-            {SLOT_ORDER.map((slotType, i) => (
+            {SLOT_ORDER.map((slotType) => (
               <div key={slotType}>
                 <DroppableSlot
                   slotType={slotType}
