@@ -1,4 +1,24 @@
-export const AUD_TO_TWD_RATE = 20.5;
+export const AUD_TO_TWD_FALLBACK = 20.5;
+
+let _cachedRate: number | null = null;
+let _fetchPromise: Promise<number> | null = null;
+
+export async function fetchAudToTwdRate(): Promise<number> {
+  if (_cachedRate !== null) return _cachedRate;
+  if (_fetchPromise) return _fetchPromise;
+  _fetchPromise = (async () => {
+    try {
+      const res = await fetch("https://open.er-api.com/v6/latest/AUD");
+      const data = await res.json();
+      _cachedRate = data.rates?.TWD ?? AUD_TO_TWD_FALLBACK;
+      return _cachedRate;
+    } catch {
+      _cachedRate = AUD_TO_TWD_FALLBACK;
+      return AUD_TO_TWD_FALLBACK;
+    }
+  })();
+  return _fetchPromise;
+}
 
 export type Currency = "TWD" | "AUD";
 

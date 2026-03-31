@@ -28,7 +28,7 @@ import { PageHero } from "@/components/PageHero";
 import { useToast } from "@/components/Toast";
 import { useTranslation } from "@/i18n/LanguageContext";
 import type { BudgetCategory, Currency } from "@/data/budget";
-import { AUD_TO_TWD_RATE, CATEGORY_COLORS } from "@/data/budget";
+import { CATEGORY_COLORS } from "@/data/budget";
 import { cn } from "@/lib/utils";
 
 const categoryIcons: Record<string, LucideIcon> = {
@@ -83,6 +83,7 @@ export function Budget() {
     getSpentByCategory,
     totalBudget,
     totalSpent,
+    audToTwdRate,
   } = useBudget();
 
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -166,7 +167,7 @@ export function Budget() {
         image="https://images.unsplash.com/photo-1523482580672-f109ba8cb9be?w=1400&q=80"
         badge="Sydney 2026"
         title={t("budget.title")}
-        subtitle={`${t("budget.subtitle")} ${AUD_TO_TWD_RATE} ${t("budget.twd")}`}
+        subtitle={`${t("budget.subtitle")} ${audToTwdRate} ${t("budget.twd")}`}
         action={
           <div className="flex gap-2">
             <button
@@ -228,7 +229,7 @@ export function Budget() {
               </div>
               {formData.amount && formData.currency === "AUD" && (
                 <p className="text-sm text-muted-foreground">
-                  ≈ {formatTWD(Math.round(parseFloat(formData.amount || "0") * AUD_TO_TWD_RATE))}
+                  ≈ {formatTWD(Math.round(parseFloat(formData.amount || "0") * audToTwdRate))}
                 </p>
               )}
               <div className="space-y-1.5">

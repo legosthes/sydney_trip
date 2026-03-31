@@ -5,7 +5,7 @@ import type {
   BudgetCategory,
   Currency,
 } from "@/data/budget";
-import { AUD_TO_TWD_RATE, defaultBudgets } from "@/data/budget";
+import { AUD_TO_TWD_FALLBACK, fetchAudToTwdRate, defaultBudgets } from "@/data/budget";
 import {
   getAllBudgets,
   getAllExpenses,
@@ -19,17 +19,21 @@ export function useBudget() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [budgets, setBudgets] = useState<BudgetAllocation[]>(defaultBudgets);
   const [loading, setLoading] = useState(true);
+  const [audToTwdRate, setAudToTwdRate] = useState(AUD_TO_TWD_FALLBACK);
 
   // Load data from API on mount
   useEffect(() => {
     let cancelled = false;
     async function load() {
       try {
-        const [dbBudgets, dbExpenses] = await Promise.all([
+        const [dbBudgets, dbExpenses, liveRate] = await Promise.all([
           getAllBudgets(),
           getAllExpenses(),
+          fetchAudToTwdRate(),
         ]);
         if (cancelled) return;
+
+        setAudToTwdRate(liveRate);
 
         if (dbBudgets.length > 0) {
           setBudgets(
@@ -73,7 +77,7 @@ export function useBudget() {
     }) => {
       const amountTWD =
         data.currency === "AUD"
-          ? Math.round(data.amount * AUD_TO_TWD_RATE)
+          ? Math.round(data.amount * audToTwdRate)
           : data.amount;
 
       const created = await insertExpense({
@@ -93,7 +97,7 @@ export function useBudget() {
 
       setExpenses((prev) => [expense, ...prev]);
     },
-    []
+    [audToTwdRate]
   );
 
   const editExpense = useCallback(
@@ -109,7 +113,7 @@ export function useBudget() {
     ) => {
       const amountTWD =
         data.currency === "AUD"
-          ? Math.round(data.amount * AUD_TO_TWD_RATE)
+          ? Math.round(data.amount * audToTwdRate)
           : data.amount;
 
       await apiUpdateExpense(id, {
@@ -129,7 +133,7 @@ export function useBudget() {
         )
       );
     },
-    []
+    [audToTwdRate]
   );
 
   const removeExpense = useCallback(async (id: string) => {
@@ -172,5 +176,6 @@ export function useBudget() {
     getSpentByCategory,
     totalBudget,
     totalSpent,
+    audToTwdRate,
   };
 }

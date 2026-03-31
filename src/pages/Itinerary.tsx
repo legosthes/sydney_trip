@@ -367,7 +367,6 @@ export function Itinerary() {
   const [photoPickerOpen, setPhotoPickerOpen] = useState(false);
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleDraft, setTitleDraft] = useState("");
-  const [animateDay, setAnimateDay] = useState(false);
   const [hasMounted, setHasMounted] = useState(false);
 
   const dayNumber = selectedDay + 1;
@@ -390,11 +389,6 @@ export function Itinerary() {
     getSlotsByDay(dayNumber).then(setDaySlots);
     setFocusedLocation(null);
     setEditingTitle(false);
-    if (hasMounted) {
-      setAnimateDay(true);
-      const timeout = setTimeout(() => setAnimateDay(false), 500);
-      return () => clearTimeout(timeout);
-    }
   }, [dayNumber, hasMounted]);
 
   // Get current day's customization
@@ -619,10 +613,7 @@ export function Itinerary() {
           {/* Left column: Photo + Map — sticky */}
           <div
             className={cn(
-              "lg:sticky lg:top-20 lg:self-start space-y-3 transition-all duration-400 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto lg:scrollbar-hide",
-              animateDay
-                ? "opacity-0 translate-y-2"
-                : "opacity-100 translate-y-0",
+              "lg:sticky lg:top-20 lg:self-start space-y-3 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto lg:scrollbar-hide",
             )}
           >
             {/* Day photo */}
@@ -737,23 +728,10 @@ export function Itinerary() {
 
           {/* Center column: Slot Timeline */}
           <div
-            className={cn(
-              "space-y-3 transition-all duration-400",
-              animateDay
-                ? "opacity-0 translate-y-2"
-                : "opacity-100 translate-y-0",
-            )}
+            className="space-y-3"
           >
             {SLOT_ORDER.map((slotType, i) => (
-              <div
-                key={slotType}
-                className="animate-in fade-in slide-in-from-bottom-2"
-                style={{
-                  animationDelay: `${i * 60}ms`,
-                  animationFillMode: "both",
-                  animationDuration: "400ms",
-                }}
-              >
+              <div key={slotType}>
                 <DroppableSlot
                   slotType={slotType}
                   dayNumber={dayNumber}

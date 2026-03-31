@@ -99,6 +99,49 @@ sydney_trip_website/
 | PUT | `/api/checklist/{id}` | Update a checklist item |
 | DELETE | `/api/checklist/{id}` | Delete a checklist item |
 
+## Docker
+
+### Build the image
+
+```bash
+docker build -t sydney-trip .
+```
+
+### Run the container
+
+```bash
+docker run -p 8000:8000 sydney-trip
+```
+
+The app will be available at `http://localhost:8000`.
+
+### Run in detached mode (background)
+
+```bash
+docker run -d -p 8000:8000 --name sydney-trip sydney-trip
+```
+
+### Run with persistent SQLite database
+
+Mount your local `backend/sydney_trip.db` file so data persists across container restarts:
+
+```bash
+docker run -p 8000:8000 -v ./backend/sydney_trip.db:/app/backend/sydney_trip.db sydney-trip
+```
+
+### Stop and remove the container
+
+```bash
+docker stop sydney-trip
+docker rm sydney-trip
+```
+
+### Rebuild after code changes
+
+```bash
+docker build --no-cache -t sydney-trip .
+```
+
 ## Deployment (Railway)
 
 The app is configured for one-click deployment on [Railway](https://railway.app):

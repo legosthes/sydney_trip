@@ -157,6 +157,16 @@ export function Overview() {
 
   const currentSlide = heroSlides[heroIndex] || heroSlides[0];
 
+  const departureDate = new Date("2026-07-21");
+  const returnDate = new Date("2026-07-28");
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const daysUntilDeparture = Math.ceil(
+    (departureDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+  );
+  const isTripInProgress = today >= departureDate && today <= returnDate;
+  const isTripCompleted = today > returnDate;
+
   return (
     <div className="space-y-10 pb-20">
       {/* Hero carousel */}
@@ -199,7 +209,23 @@ export function Overview() {
           <p className="mt-2 max-w-lg text-base md:text-lg text-white/80">
             {tripInfo.dates} {t("overview.subtitle")}
           </p>
-          <div className="mt-6 flex flex-wrap gap-3">
+          <div className="mt-3">
+            {isTripCompleted ? (
+              <Badge className="bg-white/20 text-white backdrop-blur-sm border-white/30 text-sm px-3 py-1">
+                {t("overview.tripCompleted")}
+              </Badge>
+            ) : isTripInProgress ? (
+              <Badge className="bg-white/20 text-white backdrop-blur-sm border-white/30 text-sm px-3 py-1">
+                {t("overview.tripInProgress")}
+              </Badge>
+            ) : (
+              <Badge className="bg-white/20 text-white backdrop-blur-sm border-white/30 text-sm px-3 py-1">
+                <Plane className="h-3.5 w-3.5 mr-1.5" />
+                <span className="font-bold text-base mr-1">{daysUntilDeparture}</span> {t("overview.daysToGo")}
+              </Badge>
+            )}
+          </div>
+          <div className="mt-4 flex flex-wrap gap-3">
             <Link to="/itinerary">
               <Button
                 size="lg"
@@ -460,9 +486,15 @@ export function Overview() {
               const daySlotItems = allSlots.filter(
                 (s) => s.day_number === dayNum,
               );
-              const dayPlaces = daySlotItems
+              const dayPlacesAll = daySlotItems
                 .map((s) => places.find((p) => p.id === s.place_id))
                 .filter(Boolean) as PlaceRow[];
+              const seen = new Set<number>();
+              const dayPlaces = dayPlacesAll.filter((p) => {
+                if (seen.has(p.id)) return false;
+                seen.add(p.id);
+                return true;
+              });
               return (
                 <Link
                   key={day.dayLabel}

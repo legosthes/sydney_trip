@@ -52,6 +52,9 @@ const translations = {
   "overview.remaining": { en: "remaining", zh: "剩餘" },
   "overview.spent": { en: "spent", zh: "已花費" },
   "overview.of": { en: "of", zh: "/" },
+  "overview.daysToGo": { en: "days to go", zh: "天後出發" },
+  "overview.tripInProgress": { en: "Trip in progress!", zh: "旅途進行中！" },
+  "overview.tripCompleted": { en: "Trip completed!", zh: "旅程已結束！" },
 
   // Itinerary
   "itinerary.title": { en: "Trip Itinerary", zh: "旅行行程" },
@@ -166,8 +169,8 @@ const translations = {
   },
   "info.currency": { en: "Currency", zh: "貨幣" },
   "info.currencyDesc": {
-    en: "Australian Dollar (AUD). 1 AUD ≈ 20.5 TWD. Contactless payments (Apple Pay, credit cards) are widely accepted — even at markets. Tipping is not customary in Australia. ATMs are plentiful.",
-    zh: "澳幣（AUD）。1 AUD ≈ 20.5 TWD。非接觸式支付（Apple Pay、信用卡）廣泛接受，甚至市場都可以使用。澳洲不流行小費。ATM 隨處可見。",
+    en: "Australian Dollar (AUD). Contactless payments (Apple Pay, credit cards) are widely accepted — even at markets. Tipping is not customary in Australia. ATMs are plentiful.",
+    zh: "澳幣（AUD）。非接觸式支付（Apple Pay、信用卡）廣泛接受，甚至市場都可以使用。澳洲不流行小費。ATM 隨處可見。",
   },
   "info.emergency": { en: "Emergency", zh: "緊急電話" },
   "info.emergencyDesc": {
