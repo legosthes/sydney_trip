@@ -113,6 +113,7 @@ const translations = {
     en: "Click \"Add Place\" to save restaurants and attractions",
     zh: "點擊「新增景點」儲存餐廳和景點",
   },
+  "places.inItinerary": { en: "In Itinerary", zh: "已排入行程" },
 
   // Budget
   "budget.title": { en: "Budget Tracker", zh: "預算追蹤器" },
@@ -214,6 +215,13 @@ const translations = {
   "checklist.noItems": { en: "No items in checklist", zh: "清單中沒有項目" },
   "checklist.checked": { en: "packed!", zh: "已打包！" },
   "checklist.unchecked": { en: "unpacked", zh: "已取消打包" },
+  "checklist.addGroup": { en: "Add Group", zh: "新增分組" },
+  "checklist.editGroup": { en: "Edit Group", zh: "編輯分組" },
+  "checklist.deleteGroup": { en: "Delete Group", zh: "刪除分組" },
+  "checklist.groupName": { en: "Group Name", zh: "分組名稱" },
+  "checklist.groupExists": { en: "Group already exists", zh: "分組已存在" },
+  "checklist.groupAdded": { en: "Group added", zh: "已新增分組" },
+  "checklist.dragHere": { en: "Drag items here", zh: "拖曳項目至此" },
 
   // Toast
   "toast.expenseAdded": { en: "Expense added", zh: "已新增支出" },

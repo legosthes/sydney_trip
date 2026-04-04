@@ -12,6 +12,7 @@ import {
   Globe,
   ChevronLeft,
   ChevronRight,
+  CalendarCheck,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
@@ -72,6 +73,11 @@ export function Overview() {
       cancelled = true;
     };
   }, []);
+
+  const assignedPlaceIds = useMemo(
+    () => new Set(allSlots.map((s) => s.place_id)),
+    [allSlots],
+  );
 
   const sortedPlaces = useMemo(
     () =>
@@ -647,7 +653,12 @@ export function Overview() {
             {sortedPlaces.slice(0, PLACES_PREVIEW_LIMIT).map((p) => (
               <Card
                 key={p.id}
-                className="group overflow-hidden border-border/50 shadow-sm hover:shadow-md transition-all hover:-translate-y-0.5 py-0"
+                className={cn(
+                  "group overflow-hidden shadow-sm hover:shadow-md transition-all hover:-translate-y-0.5 py-0",
+                  assignedPlaceIds.has(p.id)
+                    ? "border-emerald-500/60 ring-1 ring-emerald-500/20"
+                    : "border-border/50",
+                )}
               >
                 {p.image_url ? (
                   <div className="relative h-28 w-full overflow-hidden">
@@ -662,6 +673,11 @@ export function Overview() {
                         {p.category}
                       </Badge>
                     )}
+                    {assignedPlaceIds.has(p.id) && (
+                      <div className="absolute top-2 right-2 flex items-center gap-1 rounded-full bg-emerald-500 text-white px-2 py-0.5 text-[10px] font-semibold shadow-lg">
+                        <CalendarCheck className="h-2.5 w-2.5" />
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="relative h-16 w-full bg-muted flex items-center justify-center">
@@ -670,6 +686,11 @@ export function Overview() {
                       <Badge className="absolute top-2 left-2 bg-secondary text-foreground border-0 text-[10px]">
                         {p.category}
                       </Badge>
+                    )}
+                    {assignedPlaceIds.has(p.id) && (
+                      <div className="absolute top-2 right-2 flex items-center gap-1 rounded-full bg-emerald-500 text-white px-2 py-0.5 text-[10px] font-semibold shadow-lg">
+                        <CalendarCheck className="h-2.5 w-2.5" />
+                      </div>
                     )}
                   </div>
                 )}

@@ -10,6 +10,7 @@ import {
   Loader2,
   MapPinned,
   Search,
+  CalendarCheck,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -17,10 +18,12 @@ import { PageHero } from "@/components/PageHero";
 import { useToast } from "@/components/Toast";
 import {
   getAllPlaces,
+  getAllSlots,
   insertPlace,
   updatePlace,
   deletePlace,
   type PlaceRow,
+  type ItinerarySlotRow,
 } from "@/lib/api";
 import { useTranslation } from "@/i18n/LanguageContext";
 import { cn } from "@/lib/utils";
@@ -59,6 +62,7 @@ export function MyPlaces() {
   const { t } = useTranslation();
   const { toast } = useToast();
   const [places, setPlaces] = useState<PlaceRow[]>([]);
+  const [allSlots, setAllSlots] = useState<ItinerarySlotRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [searchTerm, setSearchTerm] = useState("");
@@ -67,11 +71,14 @@ export function MyPlaces() {
   const [formData, setFormData] = useState<PlaceForm>(emptyForm);
 
   useEffect(() => {
-    getAllPlaces().then((rows) => {
-      setPlaces(rows);
+    Promise.all([getAllPlaces(), getAllSlots()]).then(([placeRows, slotRows]) => {
+      setPlaces(placeRows);
+      setAllSlots(slotRows);
       setLoading(false);
     });
   }, []);
+
+  const assignedPlaceIds = new Set(allSlots.map((s) => s.place_id));
 
   const categoryFilters = ["All", ...CATEGORIES];
 
@@ -357,19 +364,30 @@ export function MyPlaces() {
           {filtered.map((place) => (
             <Card
               key={place.id}
-              className="border-border/50 shadow-sm overflow-hidden py-0"
+              className={cn(
+                "shadow-sm overflow-hidden py-0",
+                assignedPlaceIds.has(place.id)
+                  ? "border-emerald-500/60 ring-1 ring-emerald-500/20"
+                  : "border-border/50",
+              )}
             >
               {/* Image or Map embed */}
               {place.image_url ? (
-                <div className="aspect-[16/9] w-full overflow-hidden">
+                <div className="relative aspect-[16/9] w-full overflow-hidden">
                   <img
                     src={place.image_url}
                     alt={place.name}
                     className="h-full w-full object-cover"
                   />
+                  {assignedPlaceIds.has(place.id) && (
+                    <div className="absolute top-3 right-3 flex items-center gap-1.5 rounded-full bg-emerald-500 text-white px-2.5 py-1 text-[11px] font-semibold shadow-lg">
+                      <CalendarCheck className="h-3 w-3" />
+                      {t("places.inItinerary")}
+                    </div>
+                  )}
                 </div>
               ) : place.maps_url ? (
-                <div className="aspect-[16/9] w-full">
+                <div className="relative aspect-[16/9] w-full">
                   <iframe
                     src={`https://maps.google.com/maps?q=${encodeURIComponent(place.name)}&output=embed&z=15`}
                     className="h-full w-full border-0"
@@ -377,12 +395,26 @@ export function MyPlaces() {
                     allowFullScreen
                     title={place.name}
                   />
+                  {assignedPlaceIds.has(place.id) && (
+                    <div className="absolute top-3 right-3 flex items-center gap-1.5 rounded-full bg-emerald-500 text-white px-2.5 py-1 text-[11px] font-semibold shadow-lg">
+                      <CalendarCheck className="h-3 w-3" />
+                      {t("places.inItinerary")}
+                    </div>
+                  )}
                 </div>
               ) : null}
               <CardContent className="p-4 space-y-3">
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <h3 className="font-semibold text-lg">{place.name}</h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-semibold text-lg">{place.name}</h3>
+                      {assignedPlaceIds.has(place.id) && !place.image_url && !place.maps_url && (
+                        <div className="flex items-center gap-1 rounded-full bg-emerald-500 text-white px-2 py-0.5 text-[10px] font-semibold">
+                          <CalendarCheck className="h-2.5 w-2.5" />
+                          {t("places.inItinerary")}
+                        </div>
+                      )}
+                    </div>
                     <div className="flex items-center gap-2 mt-1 flex-wrap">
                       {place.category && (
                         <Badge variant="secondary" className="text-xs">
