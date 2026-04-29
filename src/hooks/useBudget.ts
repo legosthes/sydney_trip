@@ -5,7 +5,7 @@ import type {
   BudgetCategory,
   Currency,
 } from "@/data/budget";
-import { AUD_TO_TWD_FALLBACK, fetchAudToTwdRate, defaultBudgets } from "@/data/budget";
+import { AUD_TO_TWD_FALLBACK, fetchAudToTwdRate, RATE_REFRESH_MS, defaultBudgets } from "@/data/budget";
 import {
   getAllBudgets,
   getAllExpenses,
@@ -33,7 +33,8 @@ export function useBudget() {
         ]);
         if (cancelled) return;
 
-        setAudToTwdRate(liveRate);
+        const roundedRate = Math.round(liveRate * 100) / 100;
+        setAudToTwdRate(roundedRate);
 
         if (dbBudgets.length > 0) {
           setBudgets(
@@ -45,15 +46,23 @@ export function useBudget() {
         }
 
         setExpenses(
-          dbExpenses.map((e) => ({
-            id: e.id,
-            category: e.category as BudgetCategory,
-            description: e.description,
-            amount: e.amount,
-            currency: e.currency as Currency,
-            amountTWD: e.amount_twd,
-            date: e.date,
-          }))
+          dbExpenses.map((e) => {
+            const currency = e.currency as Currency;
+            // Recalculate AUD expenses with latest rate
+            const amountTWD =
+              currency === "AUD"
+                ? Math.round(e.amount * roundedRate)
+                : e.amount_twd;
+            return {
+              id: e.id,
+              category: e.category as BudgetCategory,
+              description: e.description,
+              amount: e.amount,
+              currency,
+              amountTWD,
+              date: e.date,
+            };
+          })
         );
       } catch (err) {
         console.error("Failed to load from API:", err);
@@ -62,8 +71,29 @@ export function useBudget() {
       }
     }
     load();
+
+    // Refresh rate every 4 hours
+    const interval = setInterval(async () => {
+      try {
+        const freshRate = await fetchAudToTwdRate(true);
+        const rounded = Math.round(freshRate * 100) / 100;
+        setAudToTwdRate(rounded);
+        // Recalculate AUD expenses with new rate
+        setExpenses((prev) =>
+          prev.map((e) =>
+            e.currency === "AUD"
+              ? { ...e, amountTWD: Math.round(e.amount * rounded) }
+              : e,
+          ),
+        );
+      } catch {
+        // keep current rate on failure
+      }
+    }, RATE_REFRESH_MS);
+
     return () => {
       cancelled = true;
+      clearInterval(interval);
     };
   }, []);
 

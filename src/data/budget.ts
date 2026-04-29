@@ -1,21 +1,29 @@
 export const AUD_TO_TWD_FALLBACK = 20.5;
+export const RATE_REFRESH_MS = 4 * 60 * 60 * 1000; // 4 hours
 
 let _cachedRate: number | null = null;
+let _cachedAt = 0;
 let _fetchPromise: Promise<number> | null = null;
 
-export async function fetchAudToTwdRate(): Promise<number> {
-  if (_cachedRate !== null) return _cachedRate;
-  if (_fetchPromise) return _fetchPromise;
+export async function fetchAudToTwdRate(forceRefresh = false): Promise<number> {
+  const expired = Date.now() - _cachedAt > RATE_REFRESH_MS;
+  if (_cachedRate !== null && !expired && !forceRefresh) return _cachedRate;
+  if (_fetchPromise && !forceRefresh) return _fetchPromise;
   _fetchPromise = (async (): Promise<number> => {
     try {
       const res = await fetch("https://open.er-api.com/v6/latest/AUD");
       const data = await res.json();
       const rate: number = data.rates?.TWD ?? AUD_TO_TWD_FALLBACK;
       _cachedRate = rate;
+      _cachedAt = Date.now();
       return rate;
     } catch {
+      if (_cachedRate !== null) return _cachedRate;
       _cachedRate = AUD_TO_TWD_FALLBACK;
+      _cachedAt = Date.now();
       return AUD_TO_TWD_FALLBACK;
+    } finally {
+      _fetchPromise = null;
     }
   })();
   return _fetchPromise;
