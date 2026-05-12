@@ -55,6 +55,63 @@ const translations = {
   "overview.daysToGo": { en: "days to go", zh: "天後出發" },
   "overview.tripInProgress": { en: "Trip in progress!", zh: "旅途進行中！" },
   "overview.tripCompleted": { en: "Trip completed!", zh: "旅程已結束！" },
+  "overview.exploreBelow": { en: "Explore below", zh: "向下探索" },
+  "overview.aboutLabel": { en: "About this trip", zh: "關於這趟旅行" },
+  "overview.aboutText": {
+    en: "It began with a promise to make memories together. Sydney's harbour, its wildlife, its winter sun, our family's first long flight south.",
+    zh: "從一個共同創造回憶的約定開始。雪梨港灣、野生動物與冬日陽光，我們一家人第一次飛向南半球。",
+  },
+  "overview.statDays": { en: "Days to go", zh: "出發倒數" },
+  "overview.statPlaces": { en: "Places planned", zh: "已安排景點" },
+  "overview.statTrip": { en: "Day trip", zh: "天行程" },
+  "overview.dossierLabel": { en: "The essentials", zh: "旅行重點" },
+  "overview.dossierTitle": { en: "Dates, beds, wings", zh: "日期、住宿、航班" },
+  "overview.budgetLabel": { en: "Budget", zh: "預算" },
+  "overview.highlightsLabel": { en: "Destinations", zh: "目的地" },
+  "overview.highlightsTitle": {
+    en: "A blend of harbour, wildlife, and city walks",
+    zh: "港灣、野生動物與城市漫步的融合",
+  },
+  "overview.featuredDayLabel": { en: "Featured day", zh: "精選一日" },
+  "overview.featuredDayTitle": {
+    en: "Your next day, ready to live",
+    zh: "下一天，準備啟程",
+  },
+  "overview.allDays": { en: "All days", zh: "所有日程" },
+  "overview.openDay": { en: "Open day", zh: "查看當日" },
+  "overview.noPlanned": { en: "Nothing planned yet for this day.", zh: "這天還沒安排活動。" },
+  "overview.packagesLabel": { en: "The week", zh: "整週行程" },
+  "overview.packagesTitle": {
+    en: "A snapshot of each day, end to end",
+    zh: "從第一天到最後一天的快照",
+  },
+  "overview.packagesDesc": {
+    en: "Open any day to plan stops, adjust slots, or pick a new cover photo.",
+    zh: "點開任一天即可安排景點、調整時段或更換封面照片。",
+  },
+  "overview.placesLabel": { en: "Saved", zh: "已儲存" },
+  "overview.placesTitle": {
+    en: "Places worth a second look",
+    zh: "值得再看一眼的地方",
+  },
+  "overview.ctaLabel": { en: "Ready to go", zh: "準備啟程" },
+  "overview.ctaTitle": {
+    en: "Plan the week, one quiet evening at a time.",
+    zh: "一個安靜的夜晚，計劃完整週。",
+  },
+  "overview.ctaDesc": {
+    en: "Drag places into slots, set the day's mood with a photo, and watch the trip take shape.",
+    zh: "把景點拖入時段、為當天挑張封面，看著旅程慢慢成形。",
+  },
+  "overview.ctaButton": { en: "Open the itinerary", zh: "打開行程" },
+  "overview.openMap": { en: "Open in Maps", zh: "在地圖中開啟" },
+  "overview.footerDesc": {
+    en: "A quiet planner for one family's week in Sydney.",
+    zh: "一家三口的雪梨一週靜謐行程。",
+  },
+  "overview.footerNav": { en: "Navigate", zh: "導覽" },
+  "overview.footerTrip": { en: "Trip", zh: "旅程" },
+  "overview.footerMade": { en: "Made with care", zh: "用心製作" },
 
   // Itinerary
   "itinerary.title": { en: "Trip Itinerary", zh: "旅行行程" },
@@ -242,12 +299,6 @@ const translations = {
   // Theme
   "theme.light": { en: "Light", zh: "淺色" },
   "theme.dark": { en: "Dark", zh: "深色" },
-  "theme.ocean": { en: "Ocean", zh: "海洋" },
-  "theme.sunset": { en: "Sunset", zh: "夕陽" },
-  "theme.forest": { en: "Forest", zh: "森林" },
-  "theme.slate": { en: "Slate", zh: "石墨" },
-  "theme.neon": { en: "Neon", zh: "霓虹" },
-  "theme.brutalist": { en: "Brutalist", zh: "粗獷" },
 } as const;
 
 export type TranslationKey = keyof typeof translations;
