@@ -186,21 +186,24 @@ export function Budget() {
         title={t("budget.title")}
         subtitle={`${t("budget.subtitle")} ${audToTwdRate} ${t("budget.twd")}${rateTimestamp ? ` (as of ${rateTimestamp})` : ""}`}
         action={
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <button
               type="button"
               onClick={openAddDialog}
-              className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-medium text-gray-900 hover:bg-white/90 transition-colors cursor-pointer"
+              className="inline-flex items-center gap-2 rounded-full bg-white text-foreground pl-4 pr-1.5 py-1.5 text-sm font-medium hover:bg-white/90 transition-colors"
             >
-              <Plus className="h-4 w-4" /> {t("budget.addExpense")}
+              {t("budget.addExpense")}
+              <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-foreground text-background">
+                <Plus className="h-3.5 w-3.5" />
+              </span>
             </button>
             {expenses.length > 0 && (
               <button
                 type="button"
                 onClick={exportCsv}
-                className="inline-flex items-center gap-2 rounded-full bg-white/20 border-2 border-white/50 px-4 py-2 text-sm font-medium text-white hover:bg-white/30 backdrop-blur-sm transition-colors cursor-pointer"
+                className="inline-flex items-center gap-2 rounded-full border border-white/40 px-3.5 py-1.5 text-sm font-medium text-white hover:bg-white/10 transition-colors"
               >
-                <Download className="h-4 w-4" /> {t("budget.exportCsv")}
+                <Download className="h-3.5 w-3.5" /> {t("budget.exportCsv")}
               </button>
             )}
           </div>

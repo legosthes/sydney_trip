@@ -163,9 +163,12 @@ export function MyPlaces() {
           <button
             type="button"
             onClick={openAdd}
-            className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-medium text-gray-900 hover:bg-white/90 transition-colors w-fit"
+            className="inline-flex items-center gap-2 rounded-full bg-white text-foreground pl-4 pr-1.5 py-1.5 text-sm font-medium hover:bg-white/90 transition-colors w-fit"
           >
-            <Plus className="h-4 w-4" /> {t("places.addPlace")}
+            {t("places.addPlace")}
+            <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-foreground text-background">
+              <Plus className="h-3.5 w-3.5" />
+            </span>
           </button>
         }
       />
