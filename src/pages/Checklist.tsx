@@ -23,8 +23,6 @@ import {
   useSensors,
 } from "@dnd-kit/core";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { PageHero } from "@/components/PageHero";
 import { useToast } from "@/components/Toast";
@@ -407,20 +405,34 @@ export function Checklist() {
         }
       />
 
-      {/* Progress */}
-      <div className="animate-in" style={{ animationFillMode: "both" }}>
-        <Card className="border-border/50 shadow-sm">
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-sm font-medium">{t("checklist.progress")}</p>
-              <p className="text-sm text-muted-foreground">
-                {checkedItems} / {totalItems} {t("checklist.packed")}
-              </p>
-            </div>
-            <Progress value={progressPct} className="h-3" />
-          </CardContent>
-        </Card>
-      </div>
+      {/* Progress hero */}
+      <section className="animate-in rounded-3xl border border-border bg-card p-6 sm:p-8 md:p-10">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+          <span className="eyebrow">{t("checklist.progress")}</span>
+          <span className="text-xs font-numeric text-muted-foreground">
+            {checkedItems} / {totalItems} {t("checklist.packed")}
+          </span>
+        </div>
+        <div className="flex items-baseline justify-between gap-6 mb-6">
+          <p className="font-stat text-[clamp(56px,8vw,128px)] tracking-tighter">
+            {progressPct.toFixed(0)}<span className="text-muted-foreground/40 text-[0.5em] align-top">%</span>
+          </p>
+          <p className="hidden sm:block text-sm text-muted-foreground max-w-[24ch] text-right">
+            {progressPct === 100
+              ? t("checklist.allDone")
+              : `${totalItems - checkedItems} ${t("checklist.itemsLeft")}`}
+          </p>
+        </div>
+        <div className="relative h-2 w-full overflow-hidden rounded-full bg-secondary">
+          <div
+            className="absolute inset-y-0 left-0 rounded-full bg-foreground"
+            style={{
+              width: `${progressPct}%`,
+              transition: "width 800ms var(--ease-out-quint)",
+            }}
+          />
+        </div>
+      </section>
 
       {/* Add/Edit Item Modal */}
       {dialogOpen && (
@@ -580,46 +592,43 @@ export function Checklist() {
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="grid gap-6 lg:grid-cols-2" data-reveal>
           {grouped.map((group, gi) => {
             const groupChecked = group.items.filter((i) => i.checked).length;
             const isCustom = customCategories.includes(group.category);
+            const allDone = groupChecked === group.items.length && group.items.length > 0;
             return (
-              <div
-                key={group.category}
-                className="animate-in"
-                style={{
-                  animationDelay: `${80 + gi * 80}ms`,
-                  animationFillMode: "both",
-                }}
-              >
-                <div className="flex items-center gap-2 mb-2">
-                  <h2 className="font-semibold text-base font-heading">
-                    {group.category}
-                  </h2>
-                  <Badge variant="secondary" className="text-xs">
+              <div key={group.category}>
+                <header className="group/grouphead flex items-baseline gap-3 mb-3 pb-3 border-b border-border">
+                  <span className="font-numeric text-xs text-muted-foreground">
+                    {String(gi + 1).padStart(2, "0")}
+                  </span>
+                  <h2 className="font-display text-2xl leading-none">{group.category}</h2>
+                  <span className={cn("font-numeric text-xs ml-1", allDone ? "text-foreground" : "text-muted-foreground")}>
                     {groupChecked}/{group.items.length}
-                  </Badge>
+                  </span>
                   <div className="flex-1" />
-                  <button
-                    type="button"
-                    className="inline-flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:text-primary hover:bg-muted transition-colors"
-                    onClick={() => openEditGroup(group.category)}
-                    title={t("checklist.editGroup")}
-                  >
-                    <PencilLine className="h-3 w-3" />
-                  </button>
-                  {isCustom && (
+                  <div className="flex gap-0.5 opacity-0 group-hover/grouphead:opacity-100 transition-opacity">
                     <button
                       type="button"
-                      className="inline-flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:text-destructive hover:bg-muted transition-colors"
-                      onClick={() => handleDeleteGroup(group.category)}
-                      title={t("checklist.deleteGroup")}
+                      className="inline-flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                      onClick={() => openEditGroup(group.category)}
+                      title={t("checklist.editGroup")}
                     >
-                      <Trash2 className="h-3 w-3" />
+                      <PencilLine className="h-3 w-3" />
                     </button>
-                  )}
-                </div>
+                    {isCustom && (
+                      <button
+                        type="button"
+                        className="inline-flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:text-destructive hover:bg-muted transition-colors"
+                        onClick={() => handleDeleteGroup(group.category)}
+                        title={t("checklist.deleteGroup")}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </button>
+                    )}
+                  </div>
+                </header>
                 <DroppableGroup category={group.category}>
                   {group.items.length > 0 ? (
                     group.items.map((item, i) => (

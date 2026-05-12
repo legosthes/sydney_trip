@@ -20,6 +20,8 @@ export function Navbar() {
   const { lang, setLang, t } = useTranslation();
   const navRef = useRef<HTMLDivElement>(null);
   const [indicator, setIndicator] = useState<{ left: number; width: number } | null>(null);
+  const [overlay, setOverlay] = useState(false);
+  const onHomepage = location.pathname === "/";
 
   useEffect(() => {
     if (!navRef.current) return;
@@ -34,18 +36,49 @@ export function Navbar() {
       left: elRect.left - navRect.left,
       width: elRect.width,
     });
-  }, [location.pathname, lang]);
+  }, [location.pathname, lang, overlay]);
+
+  // Listen to scroll only on homepage; navbar becomes transparent while
+  // the hero is in view, solid once scrolled past it.
+  useEffect(() => {
+    if (!onHomepage) {
+      setOverlay(false);
+      return;
+    }
+    const update = () => {
+      setOverlay(window.scrollY < window.innerHeight - 120);
+    };
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+    };
+  }, [onHomepage]);
 
   return (
-    <nav className="sticky top-0 z-50 border-b border-border bg-background/85 backdrop-blur-md">
+    <nav
+      className={cn(
+        "fixed top-0 left-0 right-0 z-50 transition-colors duration-500",
+        overlay
+          ? "border-b border-white/0 bg-transparent text-white"
+          : "border-b border-border bg-background/85 backdrop-blur-md text-foreground",
+      )}
+      style={{ transitionTimingFunction: "var(--ease-out-quint)" }}
+    >
       <div className="mx-auto flex h-14 w-full max-w-[1600px] items-center justify-between px-4 sm:px-6 lg:px-12 xl:px-16">
         {/* Wordmark */}
         <Link
           to="/"
-          className="font-display text-base tracking-tight no-underline text-foreground"
+          className={cn(
+            "font-display text-base tracking-tight no-underline transition-colors duration-500",
+            overlay ? "text-white" : "text-foreground",
+          )}
           aria-label="Sydney 2026"
         >
-          SYDNEY <span className="text-muted-foreground font-normal">2026</span>
+          SYDNEY{" "}
+          <span className={cn("font-normal", overlay ? "text-white/60" : "text-muted-foreground")}>2026</span>
         </Link>
 
         {/* Nav items */}
@@ -54,11 +87,14 @@ export function Navbar() {
           {indicator && (
             <span
               aria-hidden
-              className="absolute bottom-0 h-px bg-foreground"
+              className={cn(
+                "absolute bottom-0 h-px transition-colors duration-500",
+                overlay ? "bg-white" : "bg-foreground",
+              )}
               style={{
                 left: indicator.left,
                 width: indicator.width,
-                transitionProperty: "left, width",
+                transitionProperty: "left, width, background-color",
                 transitionDuration: "400ms",
                 transitionTimingFunction: "var(--ease-out-quint)",
               }}
@@ -76,7 +112,13 @@ export function Navbar() {
                 data-active={active}
                 className={cn(
                   "relative px-3 sm:px-4 py-[18px] text-[13px] tracking-tight no-underline transition-colors duration-300 flex-shrink-0",
-                  active ? "text-foreground font-medium" : "text-muted-foreground hover:text-foreground"
+                  overlay
+                    ? active
+                      ? "text-white font-medium"
+                      : "text-white/65 hover:text-white"
+                    : active
+                      ? "text-foreground font-medium"
+                      : "text-muted-foreground hover:text-foreground",
                 )}
               >
                 {t(labelKey)}
@@ -90,7 +132,12 @@ export function Navbar() {
           <ThemeToggle />
           <button
             onClick={() => setLang(lang === "en" ? "zh" : "en")}
-            className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-[11px] font-medium border border-border hover:bg-secondary transition-colors text-foreground"
+            className={cn(
+              "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-[11px] font-medium transition-colors",
+              overlay
+                ? "border border-white/40 text-white hover:bg-white/10"
+                : "border border-border text-foreground hover:bg-secondary",
+            )}
             title={lang === "en" ? "Switch to Chinese" : "Switch to English"}
           >
             <Languages className="h-3 w-3" strokeWidth={1.75} />
