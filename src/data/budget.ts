@@ -29,6 +29,10 @@ export async function fetchAudToTwdRate(forceRefresh = false): Promise<number> {
   return _fetchPromise;
 }
 
+export function getRateUpdatedAt(): number {
+  return _cachedAt;
+}
+
 export type Currency = "TWD" | "AUD";
 
 export type BudgetCategory =

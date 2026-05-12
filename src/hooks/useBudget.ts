@@ -5,7 +5,7 @@ import type {
   BudgetCategory,
   Currency,
 } from "@/data/budget";
-import { AUD_TO_TWD_FALLBACK, fetchAudToTwdRate, RATE_REFRESH_MS, defaultBudgets } from "@/data/budget";
+import { AUD_TO_TWD_FALLBACK, fetchAudToTwdRate, getRateUpdatedAt, RATE_REFRESH_MS, defaultBudgets } from "@/data/budget";
 import {
   getAllBudgets,
   getAllExpenses,
@@ -20,6 +20,7 @@ export function useBudget() {
   const [budgets, setBudgets] = useState<BudgetAllocation[]>(defaultBudgets);
   const [loading, setLoading] = useState(true);
   const [audToTwdRate, setAudToTwdRate] = useState(AUD_TO_TWD_FALLBACK);
+  const [rateUpdatedAt, setRateUpdatedAt] = useState<number>(0);
 
   // Load data from API on mount
   useEffect(() => {
@@ -35,6 +36,7 @@ export function useBudget() {
 
         const roundedRate = Math.round(liveRate * 100) / 100;
         setAudToTwdRate(roundedRate);
+        setRateUpdatedAt(getRateUpdatedAt());
 
         if (dbBudgets.length > 0) {
           setBudgets(
@@ -78,6 +80,7 @@ export function useBudget() {
         const freshRate = await fetchAudToTwdRate(true);
         const rounded = Math.round(freshRate * 100) / 100;
         setAudToTwdRate(rounded);
+        setRateUpdatedAt(getRateUpdatedAt());
         // Recalculate AUD expenses with new rate
         setExpenses((prev) =>
           prev.map((e) =>
@@ -207,5 +210,6 @@ export function useBudget() {
     totalBudget,
     totalSpent,
     audToTwdRate,
+    rateUpdatedAt,
   };
 }
