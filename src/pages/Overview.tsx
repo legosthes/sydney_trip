@@ -135,19 +135,10 @@ export function Overview() {
   const isTripInProgress = today >= departureDate && today <= returnDate;
   const isTripCompleted = today > returnDate;
 
-  // ── Reservation feature card (next planned day with content) ──
-  const featuredDay = useMemo(() => {
-    const idx = itinerary.findIndex((_, i) =>
-      allSlots.some((s) => s.day_number === i + 1),
-    );
-    const index = idx >= 0 ? idx : 0;
-    return { index, day: itinerary[index] };
-  }, [allSlots]);
-
   return (
     <div className="space-y-20 pb-0">
-      {/* ── Hero ─────────────────────────────────────────── */}
-      <section className="relative overflow-hidden rounded-3xl group/hero animate-fade">
+      {/* ── Hero (full-bleed) ─────────────────────────────── */}
+      <section className="relative overflow-hidden group/hero animate-fade -mx-4 sm:-mx-6 lg:-mx-12 xl:-mx-16 -mt-8">
         <div className="absolute inset-0">
           <img
             key={currentSlide.url}
@@ -159,7 +150,7 @@ export function Overview() {
         </div>
 
         {/* Top row: brand + nav arrows */}
-        <div className="relative flex items-center justify-between px-6 md:px-10 pt-6 md:pt-8">
+        <div className="relative flex items-center justify-between px-6 md:px-12 lg:px-16 xl:px-20 pt-6 md:pt-10">
           <span className="bracket-label text-white/80" style={{ color: "rgba(255,255,255,0.8)" }}>
             {t("overview.badge")}
           </span>
@@ -186,8 +177,8 @@ export function Overview() {
         </div>
 
         {/* Title block */}
-        <div className="relative flex min-h-[480px] md:min-h-[560px] flex-col justify-end px-6 md:px-10 pb-6 md:pb-8">
-          <h1 className="font-display text-white text-[44px] sm:text-[64px] md:text-[88px] leading-[0.95]">
+        <div className="relative flex min-h-[calc(100vh-3.5rem)] md:min-h-[calc(100vh-3.5rem)] flex-col justify-end px-6 md:px-12 lg:px-16 xl:px-20 pb-8 md:pb-12">
+          <h1 className="font-display text-white text-[48px] sm:text-[80px] md:text-[112px] lg:text-[128px] leading-[0.95] max-w-[12ch]">
             {t("overview.title")}
           </h1>
 
@@ -399,36 +390,6 @@ export function Overview() {
           )}
         </section>
       )}
-
-      {/* ── Reservation / Featured day ──────────────────── */}
-      <section className="space-y-6">
-        <div className="grid gap-10 md:grid-cols-12 md:gap-12">
-          <div className="md:col-span-3">
-            <span className="bracket-label">{t("overview.featuredDayLabel")}</span>
-          </div>
-          <div className="md:col-span-9 flex items-end justify-between gap-6">
-            <h2 className="font-heading text-3xl md:text-4xl leading-[1.1] tracking-tight max-w-[20ch]">
-              {t("overview.featuredDayTitle")}
-            </h2>
-            <Link
-              to="/itinerary"
-              className="hidden md:inline-flex items-center gap-1.5 text-sm font-medium no-underline text-foreground"
-            >
-              {t("overview.allDays")} <ArrowUpRight className="h-3.5 w-3.5" />
-            </Link>
-          </div>
-        </div>
-        <FeaturedDayCard
-          day={featuredDay.day}
-          dayNumber={featuredDay.index + 1}
-          customization={dayCustomizations.find((c) => c.day_number === featuredDay.index + 1)}
-          places={allSlots
-            .filter((s) => s.day_number === featuredDay.index + 1)
-            .map((s) => places.find((p) => p.id === s.place_id))
-            .filter(Boolean) as PlaceRow[]
-          }
-        />
-      </section>
 
       {/* ── Itinerary / Packages ────────────────────────── */}
       {allSlots.length > 0 && (
@@ -714,66 +675,6 @@ function ImageCaptionCard({ attraction }: { attraction: AttractionRow }) {
         )}
       </div>
     </article>
-  );
-}
-
-function FeaturedDayCard({
-  day,
-  dayNumber,
-  customization,
-  places,
-}: {
-  day: typeof itinerary[number];
-  dayNumber: number;
-  customization?: DayCustomization;
-  places: PlaceRow[];
-}) {
-  const { t } = useTranslation();
-  const title = customization?.title || day.title;
-  const image = customization?.image_url || day.image;
-  return (
-    <Link to="/itinerary" className="block no-underline group/featday">
-      <div className="grid md:grid-cols-5 overflow-hidden rounded-3xl border border-border bg-card">
-        <div className="relative md:col-span-3 aspect-[5/3] md:aspect-auto md:min-h-[360px] overflow-hidden">
-          <img
-            src={image}
-            alt={title}
-            className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover/featday:scale-[1.03]"
-            style={{ transitionTimingFunction: "var(--ease-out-quint)" }}
-          />
-        </div>
-        <div className="md:col-span-2 p-6 md:p-8 flex flex-col gap-5">
-          <div>
-            <span className="bracket-label">Day {dayNumber}</span>
-            <h3 className="font-display text-2xl md:text-3xl mt-2 leading-[1.05]">{title}</h3>
-            <p className="text-xs text-muted-foreground mt-2">{day.date}</p>
-          </div>
-          {places.length > 0 ? (
-            <ul className="space-y-2 border-t border-border pt-4">
-              {places.slice(0, 4).map((p, i) => (
-                <li key={p.id} className="flex items-center gap-3 text-sm">
-                  <span className="text-[10px] font-numeric text-muted-foreground w-5">{String(i + 1).padStart(2, "0")}</span>
-                  <span className="truncate">{p.name}</span>
-                </li>
-              ))}
-              {places.length > 4 && (
-                <li className="text-[11px] text-muted-foreground pl-8">+{places.length - 4} more</li>
-              )}
-            </ul>
-          ) : (
-            <p className="text-sm text-muted-foreground italic">{t("overview.noPlanned")}</p>
-          )}
-          <div className="mt-auto pt-3">
-            <span className="inline-flex items-center gap-2 rounded-full bg-foreground text-background pl-4 pr-1.5 py-1.5 text-xs font-medium">
-              {t("overview.openDay")}
-              <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-background text-foreground">
-                <ArrowUpRight className="h-3 w-3" />
-              </span>
-            </span>
-          </div>
-        </div>
-      </div>
-    </Link>
   );
 }
 
