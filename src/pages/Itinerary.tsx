@@ -9,7 +9,6 @@ import {
   Plus,
   X,
   MapPin,
-  ExternalLink,
   MapPinned,
   Loader2,
   Search,
@@ -90,6 +89,17 @@ const SLOT_META: Record<
   dinner: { icon: Wine, labelKey: "itinerary.dinner", color: "#ef4444" },
 };
 
+// ── Stat Chip (trip summary) ──
+
+function StatChip({ label, value }: { label: string; value: string }) {
+  return (
+    <span className="inline-flex items-baseline gap-1.5 rounded-full border border-border px-3 py-1 text-xs">
+      <span className="font-numeric font-semibold text-foreground">{value}</span>
+      <span className="text-muted-foreground">{label}</span>
+    </span>
+  );
+}
+
 // ── Draggable Place (sidebar) ──
 
 function DraggablePlaceCard({ place }: { place: PlaceRow }) {
@@ -141,6 +151,8 @@ function DroppableSlot({
   onOpenPicker,
   onFocusLocation,
   focusedLocation,
+  startIndex,
+  isLastInDay,
   t,
 }: {
   slotType: SlotType;
@@ -151,12 +163,13 @@ function DroppableSlot({
   onOpenPicker: (slotType: SlotType) => void;
   onFocusLocation: (name: string) => void;
   focusedLocation: string | null;
+  startIndex: number;
+  isLastInDay: boolean;
   t: (key: TranslationKey) => string;
 }) {
   const meta = SLOT_META[slotType];
   const Icon = meta.icon;
   const max = slotMax(slotType);
-  const isMeal = (MEAL_SLOTS as readonly string[]).includes(slotType);
   const slotsForType = slots.filter((s) => s.slot_type === slotType);
   const isFull = slotsForType.length >= max;
 
@@ -166,182 +179,147 @@ function DroppableSlot({
     disabled: isFull,
   });
 
-  // Resolve place data for each slot entry
   const slotPlaces = slotsForType.map((s) => ({
     slot: s,
     place: places.find((p) => p.id === s.place_id),
   }));
-  const isSingle = slotPlaces.length === 1;
 
   return (
-    <div
+    <section
       ref={setNodeRef}
       className={cn(
-        "rounded-xl border-2 border-dashed p-3 transition-colors",
-        isOver && !isFull ? "border-primary bg-primary/5" : "border-border/60",
-        isFull && isOver && "border-destructive/50",
+        "relative rounded-2xl border transition-colors",
+        isOver && !isFull ? "border-foreground bg-accent/30" : "border-transparent",
+        isFull && isOver && "border-destructive/40",
       )}
     >
-      {/* Slot header */}
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-2">
-          <div
-            className="rounded-lg p-1.5"
-            style={{ backgroundColor: `${meta.color}15` }}
-          >
-            <Icon className="h-3.5 w-3.5" style={{ color: meta.color }} />
-          </div>
-          <span className="text-xs font-semibold">{t(meta.labelKey)}</span>
-          <span className="text-[10px] text-muted-foreground">
-            {slotsForType.length}/{max}
-          </span>
+      {/* Slot label rule */}
+      <header className="flex items-center gap-3 px-1 pt-1 pb-3">
+        <div className="rounded-md p-1" style={{ backgroundColor: `${meta.color}18` }}>
+          <Icon className="h-3 w-3" strokeWidth={2} style={{ color: meta.color }} />
         </div>
+        <span className="eyebrow">{t(meta.labelKey)}</span>
+        <span className="text-[10px] text-muted-foreground font-numeric">
+          {slotsForType.length}/{max}
+        </span>
+        <div className="flex-1 rule mx-1" />
         {!isFull && (
           <button
             type="button"
             onClick={() => onOpenPicker(slotType)}
-            className="inline-flex items-center gap-1 rounded-full border border-border px-2 py-0.5 text-[10px] font-medium hover:bg-secondary transition-colors"
+            className="inline-flex items-center gap-1 rounded-full border border-border px-2 py-0.5 text-[10px] font-medium hover:bg-secondary transition-colors text-foreground"
           >
             <Plus className="h-2.5 w-2.5" /> {t("itinerary.addToSlot")}
           </button>
         )}
-      </div>
+      </header>
 
-      {/* Place cards */}
+      {/* Stops timeline */}
       {slotPlaces.length > 0 ? (
-        <div
-          className={cn(
-            "grid gap-2",
-            isMeal
-              ? "grid-cols-1"
-              : slotPlaces.length === 1
-                ? "grid-cols-1"
-                : slotPlaces.length === 2
-                  ? "grid-cols-1 sm:grid-cols-2"
-                  : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3",
-          )}
-        >
-          {slotPlaces.map(({ slot, place }) =>
-            place ? (
-              <div
+        <ol className="relative space-y-3 pl-1">
+          {slotPlaces.map(({ slot, place }, idx) => {
+            if (!place) return null;
+            const stopNumber = startIndex + idx + 1;
+            const focused = focusedLocation === place.name;
+            const notLastInSlot = idx < slotPlaces.length - 1;
+            const showLine = notLastInSlot || !isLastInDay;
+            return (
+              <li
                 key={slot.id}
-                onClick={() => onFocusLocation(place.name)}
-                className={cn(
-                  "group relative flex flex-col rounded-lg border bg-card cursor-pointer transition-all hover:shadow-sm overflow-hidden",
-                  focusedLocation === place.name
-                    ? "border-primary ring-1 ring-primary/30"
-                    : "border-border/50",
-                )}
-                style={{ minHeight: isSingle ? undefined : "236px" }}
+                className="relative group"
               >
-                {/* Image area */}
-                {place.image_url ? (
-                  <div
-                    className={cn(
-                      "w-full overflow-hidden flex-shrink-0",
-                      isSingle ? "h-36" : "h-28",
-                    )}
-                  >
-                    <img
-                      src={place.image_url}
-                      alt=""
-                      className="h-full w-full object-cover"
-                    />
-                  </div>
-                ) : (
-                  <div
-                    className={cn(
-                      "w-full bg-primary/5 flex items-center justify-center flex-shrink-0",
-                      isSingle ? "h-36" : "h-28",
-                    )}
-                  >
-                    <MapPin className="h-8 w-8 text-primary/30" />
-                  </div>
+                {/* Dashed connector below */}
+                {showLine && (
+                  <span
+                    aria-hidden
+                    className="absolute left-[15px] top-12 bottom-[-12px] w-px"
+                    style={{
+                      backgroundImage:
+                        "repeating-linear-gradient(to bottom, var(--border) 0 4px, transparent 4px 8px)",
+                    }}
+                  />
                 )}
-                {/* Info area */}
-                <div
-                  className={cn(
-                    "flex-1 flex flex-col justify-between",
-                    isSingle ? "p-4" : "p-3",
-                  )}
-                >
-                  <div>
-                    <p
-                      className={cn(
-                        "font-semibold leading-tight",
-                        isSingle ? "text-xl" : "text-sm",
-                      )}
-                    >
-                      {place.name}
-                    </p>
-                    {place.category && (
-                      <Badge
-                        variant="secondary"
-                        className={cn(
-                          "mt-1",
-                          isSingle ? "text-[10px]" : "text-[9px]",
-                        )}
-                      >
-                        {place.category}
-                      </Badge>
-                    )}
-                    {place.notes && (
-                      <p
-                        className={cn(
-                          "text-muted-foreground mt-1",
-                          isSingle
-                            ? "text-xs line-clamp-3"
-                            : "text-[10px] line-clamp-2",
-                        )}
-                      >
-                        {place.notes}
-                      </p>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-1.5 mt-2">
-                    {place.maps_url && (
-                      <a
-                        href={place.maps_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={(e) => e.stopPropagation()}
-                        className={cn(
-                          "inline-flex items-center gap-0.5 text-muted-foreground hover:text-primary",
-                          isSingle ? "text-xs" : "text-[10px]",
-                        )}
-                      >
-                        <MapPin
-                          className={cn(isSingle ? "h-3 w-3" : "h-2.5 w-2.5")}
-                        />{" "}
-                        Map{" "}
-                        <ExternalLink
-                          className={cn(isSingle ? "h-2.5 w-2.5" : "h-2 w-2")}
-                        />
-                      </a>
-                    )}
-                  </div>
-                </div>
-                {/* Remove button */}
+
                 <button
                   type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onRemove(slot.id);
-                  }}
-                  className="absolute top-1.5 right-1.5 hidden group-hover:flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-white text-[10px] shadow-sm"
+                  onClick={() => onFocusLocation(place.name)}
+                  className={cn(
+                    "relative flex w-full items-stretch gap-3 rounded-2xl border bg-card text-left transition-all overflow-hidden",
+                    "hover:border-foreground/40",
+                    focused ? "border-foreground/70 ring-1 ring-foreground/15" : "border-border",
+                  )}
+                  style={{ transitionTimingFunction: "var(--ease-out-quint)", transitionDuration: "260ms" }}
                 >
-                  <X className="h-3 w-3" />
+                  {/* Numbered marker (overlapping image) */}
+                  <span
+                    aria-hidden
+                    className={cn(
+                      "absolute left-2 top-2 z-10 inline-flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-medium font-numeric ring-2 ring-card",
+                      focused ? "bg-foreground text-background" : "bg-background text-foreground border border-border"
+                    )}
+                  >
+                    {String(stopNumber).padStart(2, "0")}
+                  </span>
+
+                  {/* Image thumbnail */}
+                  {place.image_url ? (
+                    <div className="relative h-24 w-28 sm:h-28 sm:w-36 flex-shrink-0 overflow-hidden">
+                      <img
+                        src={place.image_url}
+                        alt=""
+                        className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
+                        style={{ transitionTimingFunction: "var(--ease-out-quint)" }}
+                      />
+                    </div>
+                  ) : (
+                    <div className="h-24 w-28 sm:h-28 sm:w-36 flex-shrink-0 bg-muted flex items-center justify-center">
+                      <MapPin className="h-6 w-6 text-muted-foreground/40" />
+                    </div>
+                  )}
+
+                  {/* Info */}
+                  <div className="flex-1 min-w-0 py-3 pr-3 sm:py-4 sm:pr-4 flex flex-col justify-between">
+                    <div className="min-w-0 space-y-1">
+                      <p className="font-heading text-base sm:text-lg leading-tight truncate">{place.name}</p>
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        {place.category && (
+                          <span className="bracket-label">{place.category}</span>
+                        )}
+                      </div>
+                      {place.notes && (
+                        <p className="text-xs text-muted-foreground line-clamp-2 pt-1">{place.notes}</p>
+                      )}
+                    </div>
+                    {place.maps_url && (
+                      <span className="mt-2 inline-flex items-center gap-1 text-[11px] text-muted-foreground">
+                        <MapPin className="h-3 w-3" /> Open in Maps
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Remove */}
+                  <span
+                    role="button"
+                    aria-label="Remove from slot"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onRemove(slot.id);
+                    }}
+                    className="absolute top-2 right-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-background/90 backdrop-blur-sm text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <X className="h-3 w-3" />
+                  </span>
                 </button>
-              </div>
-            ) : null,
-          )}
-        </div>
+              </li>
+            );
+          })}
+        </ol>
       ) : (
-        <p className="text-[11px] text-muted-foreground text-center py-3">
-          {t("itinerary.dragHint")}
-        </p>
+        <div className="rounded-xl border border-dashed border-border py-3 text-center">
+          <p className="text-[11px] text-muted-foreground">{t("itinerary.dragHint")}</p>
+        </div>
       )}
-    </div>
+    </section>
   );
 }
 
@@ -555,51 +533,46 @@ export function Itinerary() {
     <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div className="pb-20">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold tracking-tight font-heading">
-            {t("itinerary.title")}
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            {t("itinerary.subtitle")}
-          </p>
-        </div>
+        <header className="mb-6 flex items-end justify-between gap-6">
+          <div>
+            <span className="bracket-label">{t("itinerary.title")}</span>
+            <h1 className="font-display text-3xl sm:text-4xl mt-2 leading-[1.05] max-w-[18ch]">
+              {t("itinerary.subtitle")}
+            </h1>
+          </div>
+        </header>
 
-        {/* Day Selector */}
-        <div className="mb-8">
-          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+        {/* Day Selector — editorial tabs */}
+        <nav className="mb-8 border-b border-border">
+          <div className="flex gap-1 overflow-x-auto scrollbar-hide -mb-px">
             {itinerary.map((day, i) => {
               const custom = dayCustomizations.find(
                 (c) => c.day_number === i + 1,
               );
+              const active = selectedDay === i;
               return (
                 <button
                   key={day.dayLabel}
                   onClick={() => setSelectedDay(i)}
                   className={cn(
-                    "flex-shrink-0 rounded-2xl border px-5 py-3 text-left transition-all duration-300",
-                    selectedDay === i
-                      ? "border-primary bg-primary text-primary-foreground shadow-md scale-[1.02]"
-                      : "border-border bg-card hover:border-primary/40 hover:bg-secondary hover:scale-[1.01]",
+                    "flex-shrink-0 px-4 py-3 text-left border-b-2 transition-colors duration-300",
+                    active
+                      ? "border-foreground text-foreground"
+                      : "border-transparent text-muted-foreground hover:text-foreground",
                   )}
+                  style={{ transitionTimingFunction: "var(--ease-out-quint)" }}
                 >
-                  <p
-                    className={cn(
-                      "text-xs font-medium",
-                      selectedDay === i
-                        ? "text-primary-foreground/70"
-                        : "text-muted-foreground",
-                    )}
-                  >
-                    {day.date}
+                  <p className={cn("text-[10px] font-numeric", active ? "text-muted-foreground" : "text-muted-foreground/70")}>
+                    {day.dayLabel} · {day.date}
                   </p>
-                  <p className="font-semibold text-sm mt-0.5">
+                  <p className="font-heading text-sm mt-0.5 max-w-[20ch] truncate">
                     {custom?.title || day.title}
                   </p>
                 </button>
               );
             })}
           </div>
-        </div>
+        </nav>
 
         {/* 3-column layout: [Photo+Map | Slots | Unassigned Sidebar] */}
         <div
@@ -727,24 +700,53 @@ export function Itinerary() {
           </div>
 
           {/* Center column: Slot Timeline */}
-          <div
-            className="space-y-3"
-          >
-            {SLOT_ORDER.map((slotType) => (
-              <div key={slotType}>
-                <DroppableSlot
-                  slotType={slotType}
-                  dayNumber={dayNumber}
-                  slots={daySlots}
-                  places={allPlaces}
-                  onRemove={handleRemoveSlot}
-                  onOpenPicker={openPicker}
-                  onFocusLocation={setFocusedLocation}
-                  focusedLocation={focusedLocation}
-                  t={t}
-                />
-              </div>
-            ))}
+          <div className="space-y-6">
+            {/* Trip stats chips */}
+            {(() => {
+              const totalStops = daySlots.length;
+              const mealCount = daySlots.filter((s) => (MEAL_SLOTS as readonly string[]).includes(s.slot_type)).length;
+              const activityCount = totalStops - mealCount;
+              return (
+                <div className="flex flex-wrap items-center gap-2">
+                  <StatChip label={t("itinerary.statStops")} value={String(totalStops)} />
+                  <StatChip label={t("itinerary.statActivities")} value={String(activityCount)} />
+                  <StatChip label={t("itinerary.statMeals")} value={String(mealCount)} />
+                  <span className="ml-auto eyebrow text-muted-foreground">
+                    {itinerary[selectedDay].dayLabel}
+                  </span>
+                </div>
+              );
+            })()}
+
+            {/* Slot sections */}
+            <div className="space-y-5">
+              {(() => {
+                const cumulative: Record<SlotType, number> = {
+                  breakfast: 0, morning: 0, lunch: 0, afternoon: 0, dinner: 0, evening: 0,
+                };
+                let running = 0;
+                for (const st of SLOT_ORDER) {
+                  cumulative[st] = running;
+                  running += daySlots.filter((s) => s.slot_type === st).length;
+                }
+                return SLOT_ORDER.map((slotType, sIdx) => (
+                  <DroppableSlot
+                    key={slotType}
+                    slotType={slotType}
+                    dayNumber={dayNumber}
+                    slots={daySlots}
+                    places={allPlaces}
+                    onRemove={handleRemoveSlot}
+                    onOpenPicker={openPicker}
+                    onFocusLocation={setFocusedLocation}
+                    focusedLocation={focusedLocation}
+                    startIndex={cumulative[slotType]}
+                    isLastInDay={sIdx === SLOT_ORDER.length - 1}
+                    t={t}
+                  />
+                ));
+              })()}
+            </div>
           </div>
 
           {/* Right column: Collapsible Unassigned Places sidebar */}

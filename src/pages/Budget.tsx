@@ -18,10 +18,6 @@ import {
   Download,
   type LucideIcon,
 } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { useBudget } from "@/hooks/useBudget";
 import { PageHero } from "@/components/PageHero";
@@ -184,7 +180,7 @@ export function Budget() {
         image="https://images.unsplash.com/photo-1523482580672-f109ba8cb9be?w=1400&q=80"
         badge="Sydney 2026"
         title={t("budget.title")}
-        subtitle={`${t("budget.subtitle")} ${audToTwdRate} ${t("budget.twd")}${rateTimestamp ? ` (as of ${rateTimestamp})` : ""}`}
+        subtitle={t("budget.subtitleShort")}
         action={
           <div className="flex flex-wrap gap-2">
             <button
@@ -364,321 +360,327 @@ export function Budget() {
         </div>
       )}
 
-      {/* Summary Cards */}
-      <div className="grid gap-4 sm:grid-cols-3">
-        {[
-          {
-            icon: Wallet,
-            label: t("budget.totalBudget"),
-            value: formatTWD(totalBudget),
-            iconClass: "bg-primary/10",
-            iconColor: "text-primary",
-            delay: 0,
-          },
-          {
-            icon: TrendingUp,
-            label: t("budget.totalSpent"),
-            value: formatTWD(totalSpent),
-            iconClass: "bg-chart-3/10",
-            iconColor: "text-chart-3",
-            delay: 1,
-          },
-          {
-            icon: TrendingDown,
-            label: t("budget.remaining"),
-            value: formatTWD(remaining),
-            iconClass: remaining >= 0 ? "bg-primary/10" : "bg-destructive/10",
-            iconColor: remaining >= 0 ? "text-primary" : "text-destructive",
-            delay: 2,
-          },
-        ].map((card, i) => {
-          const Icon = card.icon;
-          return (
-            <div
-              key={i}
-              className="animate-in"
-              style={{
-                animationDelay: `${card.delay * 80}ms`,
-                animationFillMode: "both",
-              }}
-            >
-              <Card
+      {/* ── Account block ───────────────────────────────── */}
+      <section className="rounded-3xl border border-border bg-card p-6 sm:p-8 md:p-10 animate-in">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-8">
+          <span className="inline-flex items-center gap-2 rounded-full border border-border px-3 py-1 text-[11px] font-numeric text-muted-foreground">
+            Jul 21 <span aria-hidden>→</span> Jul 28
+          </span>
+          <span className="eyebrow">{t("budget.accountDetails")}</span>
+        </div>
+
+        <div className="grid gap-8 md:grid-cols-12">
+          {/* Hero number */}
+          <div className="md:col-span-7 space-y-3">
+            <p className="bracket-label">{t("budget.totalBudget")}</p>
+            <p className="font-stat text-[clamp(48px,7vw,104px)] tracking-tighter">
+              {formatTWD(totalBudget)}
+            </p>
+            <div className="flex items-center gap-3 text-sm">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1 text-xs font-medium">
+                1 AUD = {audToTwdRate}
+              </span>
+              {rateTimestamp && (
+                <span className="text-xs text-muted-foreground">
+                  Updated {rateTimestamp}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Side stats */}
+          <div className="md:col-span-5 grid grid-cols-2 gap-px bg-border rounded-2xl overflow-hidden self-start">
+            <div className="bg-card p-4 space-y-1">
+              <p className="bracket-label">{t("budget.totalSpent")}</p>
+              <p className="font-stat text-2xl">{formatTWD(totalSpent)}</p>
+              <div className="flex items-center gap-1 text-[11px] text-chart-3">
+                <TrendingUp className="h-3 w-3" strokeWidth={2} />
+                {spentPct.toFixed(0)}% {t("budget.used")}
+              </div>
+            </div>
+            <div className="bg-card p-4 space-y-1">
+              <p className="bracket-label">{t("budget.remaining")}</p>
+              <p
                 className={cn(
-                  "border-border/50 shadow-sm",
-                  i === 2 && remaining < 0 && "border-destructive/50",
+                  "font-stat text-2xl",
+                  remaining < 0 && "text-destructive",
                 )}
               >
-                <CardContent className="p-5">
-                  <div className="flex items-center gap-3">
-                    <div className={cn("rounded-xl p-3", card.iconClass)}>
-                      <Icon className={cn("h-5 w-5", card.iconColor)} />
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">
-                        {card.label}
-                      </p>
-                      <p
-                        className={cn(
-                          "text-2xl font-bold font-heading",
-                          i === 2 && remaining < 0 && "text-destructive",
-                        )}
-                      >
-                        {card.value}
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Overall Progress */}
-      <div
-        className="animate-in"
-        style={{ animationDelay: "240ms", animationFillMode: "both" }}
-      >
-        <Card className="border-border/50 shadow-sm">
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-sm font-medium">
-                {t("budget.overallSpending")}
+                {remaining >= 0
+                  ? formatTWD(remaining)
+                  : `-${formatTWD(Math.abs(remaining))}`}
               </p>
-              <p className="text-sm text-muted-foreground">
-                {spentPct.toFixed(0)}% {t("budget.used")}
-              </p>
+              <div
+                className={cn(
+                  "flex items-center gap-1 text-[11px]",
+                  remaining < 0 ? "text-destructive" : "text-muted-foreground",
+                )}
+              >
+                <TrendingDown className="h-3 w-3" strokeWidth={2} />
+                {Math.max(0, 100 - spentPct).toFixed(0)}% {t("budget.left")}
+              </div>
             </div>
-            <Progress value={spentPct} className="h-3" />
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        </div>
 
-      {/* Category Budgets */}
-      <div
+        {/* Big progress */}
+        <div className="mt-8 space-y-2">
+          <div className="relative h-2 w-full overflow-hidden rounded-full bg-secondary">
+            <div
+              className={cn(
+                "absolute inset-y-0 left-0 rounded-full",
+                spentPct > 90 ? "bg-destructive" : "bg-foreground",
+              )}
+              style={{
+                width: `${Math.min(spentPct, 100)}%`,
+                transition: "width 600ms var(--ease-out-quint)",
+              }}
+            />
+          </div>
+          <div className="flex justify-between text-[11px] text-muted-foreground font-numeric">
+            <span>{formatTWD(totalSpent)} {t("budget.totalSpent").toLowerCase()}</span>
+            <span>
+              {formatTWD(totalBudget)} {t("budget.totalBudget").toLowerCase()}
+            </span>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Category cards ──────────────────────────────── */}
+      <section
         className="animate-in"
-        style={{ animationDelay: "320ms", animationFillMode: "both" }}
+        style={{ animationDelay: "120ms", animationFillMode: "both" }}
       >
-        <div>
-          <h2 className="text-xl font-bold tracking-tight font-heading mb-4">
+        <div className="mb-4 flex items-end justify-between">
+          <h2 className="font-heading text-xl tracking-tight">
             {t("budget.categoryBudgets")}
           </h2>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {budgets.map((b, idx) => {
-              const Icon = categoryIcons[b.category] || Wallet;
-              const spent = getSpentByCategory(b.category);
-              const pct =
-                b.budgetTWD > 0
-                  ? Math.min((spent / b.budgetTWD) * 100, 100)
-                  : 0;
-              const catRemaining = b.budgetTWD - spent;
-              const isEditing = editingBudget === b.category;
-              return (
-                <div
-                  key={b.category}
-                  className="animate-in"
-                  style={{
-                    animationDelay: `${400 + idx * 60}ms`,
-                    animationFillMode: "both",
-                  }}
-                >
-                  <Card className="border-border/50 shadow-sm">
-                    <CardContent className="p-5 space-y-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div
-                            className="rounded-xl p-2.5"
-                            style={{
-                              backgroundColor: `${CATEGORY_COLORS[b.category]}15`,
-                            }}
-                          >
-                            <Icon
-                              className="h-4 w-4"
-                              style={{ color: CATEGORY_COLORS[b.category] }}
-                            />
-                          </div>
-                          <span className="font-semibold text-sm">
-                            {b.category}
-                          </span>
-                        </div>
-                        {!isEditing ? (
-                          <button
-                            type="button"
-                            className="inline-flex h-7 w-7 items-center justify-center rounded-lg hover:bg-muted transition-colors"
-                            onClick={() => {
-                              setEditingBudget(b.category);
-                              setEditValue(b.budgetTWD.toString());
-                            }}
-                          >
-                            <PencilLine className="h-3.5 w-3.5" />
-                          </button>
-                        ) : (
-                          <div className="flex gap-1">
-                            <button
-                              type="button"
-                              className="inline-flex h-7 w-7 items-center justify-center rounded-lg hover:bg-muted transition-colors"
-                              onClick={() => handleSaveBudget(b.category)}
-                            >
-                              <Check className="h-3.5 w-3.5 text-primary" />
-                            </button>
-                            <button
-                              type="button"
-                              className="inline-flex h-7 w-7 items-center justify-center rounded-lg hover:bg-muted transition-colors"
-                              onClick={() => setEditingBudget(null)}
-                            >
-                              <X className="h-3.5 w-3.5" />
-                            </button>
-                          </div>
+          <span className="eyebrow">
+            {budgets.length} {t("budget.categories")}
+          </span>
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3" data-reveal>
+          {budgets.map((b) => {
+            const Icon = categoryIcons[b.category] || Wallet;
+            const spent = getSpentByCategory(b.category);
+            const pct =
+              b.budgetTWD > 0 ? Math.min((spent / b.budgetTWD) * 100, 100) : 0;
+            const catRemaining = b.budgetTWD - spent;
+            const isEditing = editingBudget === b.category;
+            const accent = CATEGORY_COLORS[b.category];
+            const over = catRemaining < 0;
+
+            return (
+              <article
+                key={b.category}
+                className="rounded-2xl border border-border bg-card p-5 hover:border-foreground/30 transition-colors"
+              >
+                <header className="flex items-start justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <span
+                      aria-hidden
+                      className="inline-block h-2 w-2 rounded-full"
+                      style={{ backgroundColor: accent }}
+                    />
+                    <span className="text-xs font-medium">{b.category}</span>
+                  </div>
+                  {!isEditing ? (
+                    <button
+                      type="button"
+                      className="inline-flex h-6 w-6 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                      onClick={() => {
+                        setEditingBudget(b.category);
+                        setEditValue(b.budgetTWD.toString());
+                      }}
+                      aria-label="Edit budget"
+                    >
+                      <PencilLine className="h-3 w-3" />
+                    </button>
+                  ) : (
+                    <div className="flex gap-0.5">
+                      <button
+                        type="button"
+                        className="inline-flex h-6 w-6 items-center justify-center rounded-lg hover:bg-muted transition-colors text-foreground"
+                        onClick={() => handleSaveBudget(b.category)}
+                      >
+                        <Check className="h-3 w-3" />
+                      </button>
+                      <button
+                        type="button"
+                        className="inline-flex h-6 w-6 items-center justify-center rounded-lg hover:bg-muted transition-colors text-muted-foreground"
+                        onClick={() => setEditingBudget(null)}
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  )}
+                </header>
+
+                {isEditing ? (
+                  <Input
+                    type="number"
+                    value={editValue}
+                    onChange={(e) => setEditValue(e.target.value)}
+                    className="h-9 text-sm"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") handleSaveBudget(b.category);
+                      if (e.key === "Escape") setEditingBudget(null);
+                    }}
+                    autoFocus
+                  />
+                ) : (
+                  <>
+                    {/* Big spent number */}
+                    <div className="flex items-baseline gap-2 mb-3">
+                      <Icon
+                        className="h-4 w-4 text-muted-foreground"
+                        strokeWidth={1.75}
+                      />
+                      <span
+                        className={cn(
+                          "font-stat text-3xl sm:text-[36px]",
+                          over && "text-destructive",
                         )}
-                      </div>
-                      {isEditing ? (
-                        <Input
-                          type="number"
-                          value={editValue}
-                          onChange={(e) => setEditValue(e.target.value)}
-                          className="h-8 text-sm"
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") handleSaveBudget(b.category);
-                            if (e.key === "Escape") setEditingBudget(null);
-                          }}
-                          autoFocus
+                      >
+                        {formatTWD(spent)}
+                      </span>
+                    </div>
+
+                    {/* Thick bar */}
+                    <div className="relative h-[6px] w-full overflow-hidden rounded-full bg-secondary mb-2">
+                      <div
+                        className="absolute inset-y-0 left-0 rounded-full"
+                        style={{
+                          width: `${pct}%`,
+                          backgroundColor: pct > 90 ? "var(--destructive)" : accent,
+                          transition: "width 600ms var(--ease-out-quint)",
+                        }}
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between text-[11px] text-muted-foreground font-numeric">
+                      <span>
+                        {t("overview.of")} {formatTWD(b.budgetTWD)}
+                      </span>
+                      <span
+                        className={cn(
+                          "font-medium",
+                          over ? "text-destructive" : "text-foreground",
+                        )}
+                      >
+                        {over
+                          ? `-${formatTWD(Math.abs(catRemaining))}`
+                          : `${formatTWD(catRemaining)} ${t("budget.left").toLowerCase()}`}
+                      </span>
+                    </div>
+                  </>
+                )}
+              </article>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* ── Expenses as bill cards ──────────────────────── */}
+      <section
+        className="animate-in"
+        style={{ animationDelay: "200ms", animationFillMode: "both" }}
+      >
+        <div className="mb-4 flex items-end justify-between">
+          <h2 className="font-heading text-xl tracking-tight">
+            {t("budget.expenses")}
+          </h2>
+          <span className="eyebrow">
+            {expenses.length} {t("budget.items")}
+          </span>
+        </div>
+
+        {expenses.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-border bg-card py-16 px-6 text-center">
+            <Wallet
+              className="h-8 w-8 text-muted-foreground/60 mx-auto mb-3"
+              strokeWidth={1.5}
+            />
+            <p className="font-heading text-base">{t("budget.noExpenses")}</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              {t("budget.noExpensesHint")}
+            </p>
+          </div>
+        ) : (
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3" data-reveal>
+            {expenses.map((expense) => {
+              const Icon = categoryIcons[expense.category] || Wallet;
+              const accent = CATEGORY_COLORS[expense.category];
+              return (
+                <article
+                  key={expense.id}
+                  className="group/bill rounded-2xl border border-border bg-card p-5 hover:border-foreground/30 transition-colors"
+                >
+                  <header className="flex items-start justify-between mb-5">
+                    <div className="flex items-center gap-2.5">
+                      <span
+                        aria-hidden
+                        className="inline-flex h-7 w-7 items-center justify-center rounded-lg"
+                        style={{ backgroundColor: `${accent}15` }}
+                      >
+                        <Icon
+                          className="h-3.5 w-3.5"
+                          style={{ color: accent }}
+                          strokeWidth={1.75}
                         />
-                      ) : (
-                        <>
-                          <div className="flex justify-between text-sm">
-                            <span className="text-muted-foreground">
-                              {formatTWD(spent)} / {formatTWD(b.budgetTWD)}
-                            </span>
-                            <span
-                              className={cn(
-                                "font-medium",
-                                catRemaining < 0
-                                  ? "text-destructive"
-                                  : "text-primary",
-                              )}
-                            >
-                              {catRemaining >= 0
-                                ? formatTWD(catRemaining)
-                                : `-${formatTWD(Math.abs(catRemaining))}`}
-                            </span>
-                          </div>
-                          <Progress
-                            value={pct}
-                            className="h-2"
-                            style={
-                              {
-                                "--progress-color":
-                                  pct > 90
-                                    ? "#ef4444"
-                                    : CATEGORY_COLORS[b.category],
-                              } as React.CSSProperties
-                            }
-                          />
-                        </>
-                      )}
-                    </CardContent>
-                  </Card>
-                </div>
+                      </span>
+                      <div className="min-w-0">
+                        <p className="font-medium text-sm truncate max-w-[180px]">
+                          {expense.description || expense.category}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground font-numeric">
+                          {expense.date}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex gap-0.5 opacity-0 group-hover/bill:opacity-100 transition-opacity">
+                      <button
+                        type="button"
+                        className="inline-flex h-6 w-6 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                        onClick={() => openEditDialog(expense)}
+                        aria-label="Edit expense"
+                      >
+                        <PencilLine className="h-3 w-3" />
+                      </button>
+                      <button
+                        type="button"
+                        className="inline-flex h-6 w-6 items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-muted transition-colors"
+                        onClick={() => {
+                          removeExpense(expense.id);
+                          toast(t("toast.expenseDeleted"), "deleted");
+                        }}
+                        aria-label="Delete expense"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </button>
+                    </div>
+                  </header>
+
+                  <div className="flex items-baseline justify-between gap-2">
+                    <span className="font-stat text-2xl sm:text-3xl">
+                      {expense.currency === "AUD"
+                        ? `A$${expense.amount}`
+                        : formatTWD(expense.amount)}
+                    </span>
+                    <span className="bracket-label">{expense.category}</span>
+                  </div>
+                  {expense.currency === "AUD" && (
+                    <p className="text-[10px] text-muted-foreground mt-1 font-numeric">
+                      ≈ {formatTWD(expense.amountTWD)}
+                    </p>
+                  )}
+                </article>
               );
             })}
           </div>
-        </div>
-      </div>
-
-      {/* Expense List */}
-      <div
-        className="animate-in"
-        style={{ animationDelay: "500ms", animationFillMode: "both" }}
-      >
-        <div className="flex items-end justify-between mb-4">
-          <h2 className="text-xl font-bold tracking-tight font-heading">
-            {t("budget.expenses")}
-          </h2>
-          <Badge variant="secondary">
-            {expenses.length} {t("budget.items")}
-          </Badge>
-        </div>
-        {expenses.length === 0 ? (
-          <Card className="border-border/50 border-dashed">
-            <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-              <div className="rounded-full bg-muted p-4 mb-4">
-                <Wallet className="h-6 w-6 text-muted-foreground" />
-              </div>
-              <p className="font-medium text-muted-foreground">
-                {t("budget.noExpenses")}
-              </p>
-              <p className="text-sm text-muted-foreground mt-1">
-                {t("budget.noExpensesHint")}
-              </p>
-            </CardContent>
-          </Card>
-        ) : (
-          <Card className="border-border/50 shadow-sm">
-            <CardContent className="p-0">
-              {expenses.map((expense, i) => {
-                const Icon = categoryIcons[expense.category] || Wallet;
-                return (
-                  <div key={expense.id}>
-                    {i > 0 && <Separator />}
-                    <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4">
-                      <div
-                        className="rounded-xl p-2 sm:p-2.5 flex-shrink-0"
-                        style={{
-                          backgroundColor: `${CATEGORY_COLORS[expense.category]}15`,
-                        }}
-                      >
-                        <Icon
-                          className="h-4 w-4"
-                          style={{ color: CATEGORY_COLORS[expense.category] }}
-                        />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm truncate">
-                          {expense.description || expense.category}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {expense.date} · {expense.category}
-                        </p>
-                      </div>
-                      <div className="text-right flex-shrink-0">
-                        <p className="font-semibold text-sm">
-                          {expense.currency === "AUD"
-                            ? `A$${expense.amount}`
-                            : formatTWD(expense.amount)}
-                        </p>
-                        {expense.currency === "AUD" && (
-                          <p className="text-xs text-muted-foreground">
-                            ≈ {formatTWD(expense.amountTWD)}
-                          </p>
-                        )}
-                      </div>
-                      <div className="flex gap-1 flex-shrink-0">
-                        <button
-                          type="button"
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:text-primary hover:bg-muted transition-colors"
-                          onClick={() => openEditDialog(expense)}
-                        >
-                          <PencilLine className="h-4 w-4" />
-                        </button>
-                        <button
-                          type="button"
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-muted transition-colors"
-                          onClick={() => {
-                            removeExpense(expense.id);
-                            toast(t("toast.expenseDeleted"), "deleted");
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </CardContent>
-          </Card>
         )}
-      </div>
+      </section>
     </div>
   );
 }
