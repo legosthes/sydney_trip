@@ -2,6 +2,8 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/geist";
+@import "@fontsource-variable/geist-mono";
+@import "@fontsource-variable/bricolage-grotesque";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -47,7 +49,8 @@
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
   --font-sans: 'Geist Variable', ui-sans-serif, system-ui, sans-serif;
-  --font-heading: 'Geist Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-heading: 'Bricolage Grotesque Variable', 'Geist Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'Geist Mono Variable', ui-monospace, SFMono-Regular, monospace;
 
   /* Editorial motion curves */
   --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
@@ -183,18 +186,24 @@
 .font-heading {
   font-family: var(--font-heading);
   letter-spacing: -0.022em;
+  font-weight: 500;
 }
 
 .font-display {
   font-family: var(--font-heading);
-  letter-spacing: -0.035em;
+  letter-spacing: -0.03em;
   line-height: 0.95;
   font-weight: 600;
 }
 
+.font-mono {
+  font-family: var(--font-mono);
+}
+
 .font-numeric {
+  font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
-  font-feature-settings: "tnum", "ss01";
+  font-feature-settings: "tnum", "zero";
 }
 
 /* Editorial bracket label, e.g. [Destinations] */
@@ -202,30 +211,35 @@
   display: inline-flex;
   align-items: baseline;
   gap: 0.1ch;
+  font-family: var(--font-mono);
   font-size: 0.6875rem;
-  font-weight: 500;
-  letter-spacing: 0.04em;
+  font-weight: 400;
+  letter-spacing: 0.02em;
   color: var(--muted-foreground);
+  text-transform: lowercase;
   font-feature-settings: "ss01";
 }
-.bracket-label::before { content: "["; opacity: 0.7; }
-.bracket-label::after  { content: "]"; opacity: 0.7; }
+.bracket-label::before { content: "["; opacity: 0.65; }
+.bracket-label::after  { content: "]"; opacity: 0.65; }
 
 /* Eyebrow (uppercase tracker for callouts) */
 .eyebrow {
+  font-family: var(--font-mono);
   font-size: 0.6875rem;
-  font-weight: 500;
-  letter-spacing: 0.14em;
+  font-weight: 400;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--muted-foreground);
 }
 
 /* Tabular pad for huge stat numerals */
 .font-stat {
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.04em;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums lining-nums;
+  letter-spacing: -0.045em;
   font-weight: 500;
   line-height: 1;
+  font-feature-settings: "tnum", "lnum", "zero";
 }
 
 /* ─── Utilities ─── */

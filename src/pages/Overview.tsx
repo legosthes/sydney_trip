@@ -138,7 +138,7 @@ export function Overview() {
   return (
     <div className="space-y-20 pb-0">
       {/* ── Hero (full-bleed) ─────────────────────────────── */}
-      <section className="relative overflow-hidden group/hero animate-fade -mx-4 sm:-mx-6 lg:-mx-12 xl:-mx-16 -mt-8">
+      <section className="relative overflow-hidden group/hero animate-fade -mx-4 sm:-mx-6 lg:-mx-12 xl:-mx-16">
         <div className="absolute inset-0">
           <img
             key={currentSlide.url}

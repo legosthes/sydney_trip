@@ -532,18 +532,9 @@ export function Itinerary() {
   return (
     <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div className="pb-20">
-        {/* Header */}
-        <header className="mb-6 flex items-end justify-between gap-6">
-          <div>
-            <span className="bracket-label">{t("itinerary.title")}</span>
-            <h1 className="font-display text-3xl sm:text-4xl mt-2 leading-[1.05] max-w-[18ch]">
-              {t("itinerary.subtitle")}
-            </h1>
-          </div>
-        </header>
-
         {/* Day Selector — editorial tabs */}
         <nav className="mb-8 border-b border-border">
+          <span className="bracket-label block mb-3">{t("itinerary.title")}</span>
           <div className="flex gap-1 overflow-x-auto scrollbar-hide -mb-px">
             {itinerary.map((day, i) => {
               const custom = dayCustomizations.find(
@@ -585,16 +576,18 @@ export function Itinerary() {
         >
           {/* Left column: Photo + Map — sticky */}
           <div
+            key={`day-photo-${dayNumber}`}
             className={cn(
-              "lg:sticky lg:top-20 lg:self-start space-y-3 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto lg:scrollbar-hide",
+              "lg:sticky lg:top-20 lg:self-start space-y-3 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto lg:scrollbar-hide animate-fade",
             )}
           >
             {/* Day photo */}
             <div className="group/photo relative overflow-hidden rounded-2xl">
               <img
+                key={dayImage}
                 src={dayImage}
                 alt={dayTitle}
-                className="aspect-[4/3] w-full object-cover transition-transform duration-700 group-hover/photo:scale-[1.02]"
+                className="aspect-[4/3] w-full object-cover animate-hero-fade transition-transform duration-700 group-hover/photo:scale-[1.02]"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
               {/* Photo change button */}
@@ -700,7 +693,7 @@ export function Itinerary() {
           </div>
 
           {/* Center column: Slot Timeline */}
-          <div className="space-y-6">
+          <div key={`day-${dayNumber}`} className="space-y-6 animate-fade">
             {/* Trip stats chips */}
             {(() => {
               const totalStops = daySlots.length;
@@ -719,7 +712,7 @@ export function Itinerary() {
             })()}
 
             {/* Slot sections */}
-            <div className="space-y-5">
+            <div className="space-y-5" data-reveal>
               {(() => {
                 const cumulative: Record<SlotType, number> = {
                   breakfast: 0, morning: 0, lunch: 0, afternoon: 0, dinner: 0, evening: 0,

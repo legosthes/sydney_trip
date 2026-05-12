@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { LanguageProvider } from "@/i18n/LanguageContext";
 import { ToastProvider } from "@/components/Toast";
 import { Navbar } from "@/components/Navbar";
+import { cn } from "@/lib/utils";
 import { Overview } from "@/pages/Overview";
 import { Itinerary } from "@/pages/Itinerary";
 import { MyPlaces } from "@/pages/MyPlaces";
@@ -12,13 +13,19 @@ import { Checklist } from "@/pages/Checklist";
 
 function RouteTransitions() {
   const location = useLocation();
+  const onHomepage = location.pathname === "/";
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
   }, [location.pathname]);
 
   return (
-    <main className="mx-auto w-full max-w-[1600px] px-4 sm:px-6 lg:px-12 xl:px-16 pt-8">
+    <main
+      className={cn(
+        "mx-auto w-full max-w-[1600px] px-4 sm:px-6 lg:px-12 xl:px-16",
+        onHomepage ? "pt-0" : "pt-22",
+      )}
+    >
       <div key={location.pathname} className="animate-fade">
         <Routes location={location}>
           <Route path="/" element={<Overview />} />

@@ -9,11 +9,11 @@ import {
   Wifi,
   Baby,
 } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
 import { PageHero } from "@/components/PageHero";
 import { useTranslation } from "@/i18n/LanguageContext";
 import type { TranslationKey } from "@/i18n/translations";
 import type { LucideIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface InfoSection {
   icon: LucideIcon;
@@ -37,8 +37,11 @@ const sections: InfoSection[] = [
 export function TravelInfo() {
   const { t } = useTranslation();
 
+  const [spotlight, ...rest] = sections;
+  const SpotlightIcon = spotlight.icon;
+
   return (
-    <div className="pb-20 space-y-8">
+    <div className="pb-20 space-y-12">
       <PageHero
         image="https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?w=1400&q=80"
         badge="Sydney, Australia"
@@ -46,28 +49,69 @@ export function TravelInfo() {
         subtitle={t("info.subtitle")}
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {sections.map((s, i) => {
+      {/* Spotlight: weather */}
+      <section
+        className="animate-in grid gap-8 md:grid-cols-12 items-start border-b border-border pb-12"
+      >
+        <div className="md:col-span-3 flex items-start gap-4">
+          <span className="font-numeric text-xs text-muted-foreground pt-1">01</span>
+          <div
+            className="rounded-2xl p-3"
+            style={{ backgroundColor: `${spotlight.color}18` }}
+          >
+            <SpotlightIcon className="h-7 w-7" style={{ color: spotlight.color }} strokeWidth={1.5} />
+          </div>
+        </div>
+        <div className="md:col-span-9 space-y-4">
+          <span className="bracket-label">{t(spotlight.titleKey)}</span>
+          <h2 className="font-display text-3xl md:text-5xl leading-[1.02] max-w-[18ch]">
+            {t("info.spotlightTitle")}
+          </h2>
+          <p className="text-base sm:text-lg text-muted-foreground leading-relaxed max-w-[60ch] whitespace-pre-line">
+            {t(spotlight.contentKey)}
+          </p>
+        </div>
+      </section>
+
+      {/* Editorial list — numbered entries, no cards */}
+      <section className="grid gap-x-12 gap-y-10 md:grid-cols-2" data-reveal>
+        {rest.map((s, i) => {
           const Icon = s.icon;
+          const n = i + 2; // started from 01 for spotlight
           return (
-            <div key={s.titleKey} className="animate-in" style={{ animationDelay: `${i * 70}ms`, animationFillMode: "both" }}>
-              <Card className="border-border/50 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
-                <CardContent className="p-5 space-y-3">
-                  <div className="flex items-center gap-3">
-                    <div className="rounded-xl p-2.5 transition-transform duration-300 hover:scale-110" style={{ backgroundColor: `${s.color}15` }}>
-                      <Icon className="h-5 w-5" style={{ color: s.color }} />
-                    </div>
-                    <h2 className="font-semibold font-heading text-lg">{t(s.titleKey)}</h2>
-                  </div>
-                  <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
-                    {t(s.contentKey)}
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
+            <article
+              key={s.titleKey}
+              className="group/info grid grid-cols-[auto_1fr] gap-x-5 sm:gap-x-8 pb-8 border-b border-border last:border-b-0"
+            >
+              <div className="flex flex-col items-start gap-3 pt-1">
+                <span className="font-numeric text-xs text-muted-foreground">
+                  {String(n).padStart(2, "0")}
+                </span>
+                <div
+                  className={cn(
+                    "rounded-xl p-2 transition-transform duration-500",
+                    "group-hover/info:scale-[1.08]"
+                  )}
+                  style={{
+                    backgroundColor: `${s.color}14`,
+                    transitionTimingFunction: "var(--ease-out-quint)",
+                  }}
+                >
+                  <Icon className="h-4 w-4" style={{ color: s.color }} strokeWidth={1.75} />
+                </div>
+              </div>
+              <div className="space-y-2 min-w-0">
+                <h3 className="font-display text-xl sm:text-2xl leading-tight">
+                  {t(s.titleKey)}
+                </h3>
+                <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
+                  {t(s.contentKey)}
+                </p>
+              </div>
+            </article>
           );
         })}
-      </div>
+      </section>
     </div>
   );
 }

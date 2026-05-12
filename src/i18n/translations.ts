@@ -216,6 +216,10 @@ const translations = {
 
   // Travel Info
   "info.title": { en: "Travel Info", zh: "旅遊資訊" },
+  "info.spotlightTitle": {
+    en: "Pack for Sydney's quiet winter.",
+    zh: "為雪梨的溫和冬日打包行李。",
+  },
   "info.subtitle": {
     en: "Essential information for your Sydney trip in July",
     zh: "七月雪梨之旅的必備資訊",
@@ -268,6 +272,8 @@ const translations = {
 
   // Checklist
   "checklist.title": { en: "Packing Checklist", zh: "行李清單" },
+  "checklist.allDone": { en: "Everything packed. Ready to go.", zh: "都打包好了，準備出發。" },
+  "checklist.itemsLeft": { en: "items left to pack", zh: "個項目待打包" },
   "checklist.subtitle": {
     en: "Track what you need to pack for the trip",
     zh: "追蹤旅行需要打包的物品",
