@@ -284,7 +284,11 @@ export function Checklist() {
   const handleGroupSubmit = async () => {
     const name = groupName.trim();
     if (!name) return;
-    if (allCategories.includes(name) && name !== editingGroup) {
+    const activeCats = new Set([
+      ...customCategories,
+      ...(items.map((i) => i.category).filter(Boolean) as string[]),
+    ]);
+    if (activeCats.has(name) && name !== editingGroup) {
       toast(t("checklist.groupExists"), "deleted");
       return;
     }
@@ -441,7 +445,7 @@ export function Checklist() {
           role="dialog"
         >
           <div
-            className="absolute inset-0 bg-black/30 backdrop-blur-xs"
+            className="absolute inset-0 bg-black/30"
             onClick={() => {
               setDialogOpen(false);
               setEditingId(null);
@@ -526,7 +530,7 @@ export function Checklist() {
           role="dialog"
         >
           <div
-            className="absolute inset-0 bg-black/30 backdrop-blur-xs"
+            className="absolute inset-0 bg-black/30"
             onClick={() => {
               setGroupDialogOpen(false);
               setEditingGroup(null);
