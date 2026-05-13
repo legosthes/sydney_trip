@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import {
   Sun,
   Coffee,
@@ -347,7 +347,32 @@ export function Itinerary() {
   const [titleDraft, setTitleDraft] = useState("");
   const [hasMounted, setHasMounted] = useState(false);
 
+  // Day-tab sliding indicator
+  const dayTabsRef = useRef<HTMLDivElement>(null);
+  const [dayTabIndicator, setDayTabIndicator] = useState<{ left: number; width: number } | null>(null);
+  const [dayTabReady, setDayTabReady] = useState(false);
+
   const dayNumber = selectedDay + 1;
+
+  useEffect(() => {
+    if (!dayTabsRef.current) return;
+    const activeEl = dayTabsRef.current.querySelector("[data-tab-active='true']") as HTMLElement | null;
+    if (!activeEl) {
+      setDayTabIndicator(null);
+      return;
+    }
+    const raf = requestAnimationFrame(() => {
+      if (!dayTabsRef.current) return;
+      const navRect = dayTabsRef.current.getBoundingClientRect();
+      const elRect = activeEl.getBoundingClientRect();
+      setDayTabIndicator({
+        left: elRect.left - navRect.left + dayTabsRef.current.scrollLeft,
+        width: elRect.width,
+      });
+      requestAnimationFrame(() => setDayTabReady(true));
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [selectedDay, dayCustomizations]);
 
   // Fetch all places + day customizations once
   useEffect(() => {
@@ -532,10 +557,25 @@ export function Itinerary() {
   return (
     <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div className="pb-20">
-        {/* Day Selector — editorial tabs */}
+        {/* Day Selector — editorial tabs with sliding indicator */}
         <nav className="mb-8 border-b border-border">
           <span className="bracket-label block mb-3">{t("itinerary.title")}</span>
-          <div className="flex gap-1 overflow-x-auto scrollbar-hide -mb-px">
+          <div ref={dayTabsRef} className="relative flex gap-1 overflow-x-auto scrollbar-hide -mb-px">
+            {/* Sliding indicator */}
+            {dayTabIndicator && (
+              <span
+                aria-hidden
+                className="absolute bottom-0 h-[2px] bg-foreground"
+                style={{
+                  left: dayTabIndicator.left,
+                  width: dayTabIndicator.width,
+                  opacity: dayTabReady ? 1 : 0,
+                  transitionProperty: "left, width, opacity",
+                  transitionDuration: "550ms",
+                  transitionTimingFunction: "var(--ease-out-quint)",
+                }}
+              />
+            )}
             {itinerary.map((day, i) => {
               const custom = dayCustomizations.find(
                 (c) => c.day_number === i + 1,
@@ -544,19 +584,26 @@ export function Itinerary() {
               return (
                 <button
                   key={day.dayLabel}
+                  data-tab-active={active}
                   onClick={() => setSelectedDay(i)}
                   className={cn(
-                    "flex-shrink-0 px-4 py-3 text-left border-b-2 transition-colors duration-300",
+                    "flex-shrink-0 px-4 py-3 text-left transition-colors duration-400",
                     active
-                      ? "border-foreground text-foreground"
-                      : "border-transparent text-muted-foreground hover:text-foreground",
+                      ? "text-foreground"
+                      : "text-muted-foreground hover:text-foreground",
                   )}
                   style={{ transitionTimingFunction: "var(--ease-out-quint)" }}
                 >
                   <p className={cn("text-[10px] font-numeric", active ? "text-muted-foreground" : "text-muted-foreground/70")}>
                     {day.dayLabel} · {day.date}
                   </p>
-                  <p className="font-heading text-sm mt-0.5 max-w-[20ch] truncate">
+                  <p
+                    className="font-heading text-sm mt-0.5 max-w-[20ch] truncate"
+                    style={{
+                      fontVariationSettings: active ? "'wght' 540" : "'wght' 440",
+                      transition: "font-variation-settings 400ms var(--ease-out-quint)",
+                    }}
+                  >
                     {custom?.title || day.title}
                   </p>
                 </button>
@@ -700,7 +747,7 @@ export function Itinerary() {
               const mealCount = daySlots.filter((s) => (MEAL_SLOTS as readonly string[]).includes(s.slot_type)).length;
               const activityCount = totalStops - mealCount;
               return (
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2" data-reveal>
                   <StatChip label={t("itinerary.statStops")} value={String(totalStops)} />
                   <StatChip label={t("itinerary.statActivities")} value={String(activityCount)} />
                   <StatChip label={t("itinerary.statMeals")} value={String(mealCount)} />
@@ -1071,18 +1118,29 @@ export function Itinerary() {
         )}
 
         {/* Drag Overlay */}
-        <DragOverlay>
+        <DragOverlay
+          dropAnimation={{
+            duration: 280,
+            easing: "cubic-bezier(0.22, 1, 0.36, 1)",
+          }}
+        >
           {activeDragPlace && (
-            <div className="flex items-center gap-2 rounded-lg border border-primary bg-card p-2 shadow-lg opacity-90 w-48">
+            <div
+              className="flex items-center gap-2 rounded-xl border border-foreground/30 bg-card p-2 shadow-xl w-52 animate-fade"
+              style={{
+                transform: "rotate(-1.5deg) scale(1.02)",
+                cursor: "grabbing",
+              }}
+            >
               {activeDragPlace.image_url ? (
                 <img
                   src={activeDragPlace.image_url}
                   alt=""
-                  className="h-8 w-8 rounded object-cover"
+                  className="h-9 w-9 rounded-lg object-cover"
                 />
               ) : (
-                <div className="h-8 w-8 rounded bg-primary/10 flex items-center justify-center">
-                  <MapPin className="h-3.5 w-3.5 text-primary" />
+                <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center">
+                  <MapPin className="h-4 w-4 text-muted-foreground" />
                 </div>
               )}
               <p className="text-xs font-medium truncate">

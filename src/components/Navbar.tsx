@@ -20,6 +20,7 @@ export function Navbar() {
   const { lang, setLang, t } = useTranslation();
   const navRef = useRef<HTMLDivElement>(null);
   const [indicator, setIndicator] = useState<{ left: number; width: number } | null>(null);
+  const [indicatorReady, setIndicatorReady] = useState(false);
   const [overlay, setOverlay] = useState(false);
   const onHomepage = location.pathname === "/";
 
@@ -30,12 +31,19 @@ export function Navbar() {
       setIndicator(null);
       return;
     }
-    const navRect = navRef.current.getBoundingClientRect();
-    const elRect = activeEl.getBoundingClientRect();
-    setIndicator({
-      left: elRect.left - navRect.left,
-      width: elRect.width,
+    // Measure on next frame so layout settles (esp. on first paint or font load).
+    const raf = requestAnimationFrame(() => {
+      if (!navRef.current) return;
+      const navRect = navRef.current.getBoundingClientRect();
+      const elRect = activeEl.getBoundingClientRect();
+      setIndicator({
+        left: elRect.left - navRect.left,
+        width: elRect.width,
+      });
+      // Delay the fade-in by one frame so the position transition doesn't fight the opacity.
+      requestAnimationFrame(() => setIndicatorReady(true));
     });
+    return () => cancelAnimationFrame(raf);
   }, [location.pathname, lang, overlay]);
 
   // Listen to scroll only on homepage; navbar becomes transparent while
@@ -72,13 +80,26 @@ export function Navbar() {
         <Link
           to="/"
           className={cn(
-            "font-display text-base tracking-tight no-underline transition-colors duration-500",
+            "group/wm font-display text-base tracking-tight no-underline transition-colors duration-500",
             overlay ? "text-white" : "text-foreground",
           )}
           aria-label="Sydney 2026"
+          style={{ transitionTimingFunction: "var(--ease-out-quint)" }}
         >
-          SYDNEY{" "}
-          <span className={cn("font-normal", overlay ? "text-white/60" : "text-muted-foreground")}>2026</span>
+          <span className="inline-block transition-all duration-500 group-hover/wm:tracking-[0.04em]"
+                style={{ transitionTimingFunction: "var(--ease-out-quint)" }}>
+            SYDNEY
+          </span>{" "}
+          <span
+            className={cn(
+              "font-normal transition-all duration-500 group-hover/wm:opacity-100",
+              overlay ? "text-white/60" : "text-muted-foreground",
+              "opacity-80",
+            )}
+            style={{ transitionTimingFunction: "var(--ease-out-quint)" }}
+          >
+            2026
+          </span>
         </Link>
 
         {/* Nav items */}
@@ -88,14 +109,15 @@ export function Navbar() {
             <span
               aria-hidden
               className={cn(
-                "absolute bottom-0 h-px transition-colors duration-500",
+                "absolute bottom-0 h-px",
                 overlay ? "bg-white" : "bg-foreground",
               )}
               style={{
                 left: indicator.left,
                 width: indicator.width,
-                transitionProperty: "left, width, background-color",
-                transitionDuration: "400ms",
+                opacity: indicatorReady ? 1 : 0,
+                transitionProperty: "left, width, background-color, opacity",
+                transitionDuration: "550ms",
                 transitionTimingFunction: "var(--ease-out-quint)",
               }}
             />
@@ -111,15 +133,22 @@ export function Navbar() {
                 to={to}
                 data-active={active}
                 className={cn(
-                  "relative px-3 sm:px-4 py-[18px] text-[13px] tracking-tight no-underline transition-colors duration-300 flex-shrink-0",
+                  "relative px-3 sm:px-4 py-[18px] text-[13px] tracking-tight no-underline flex-shrink-0",
+                  "transition-[color,opacity] duration-400",
                   overlay
                     ? active
-                      ? "text-white font-medium"
-                      : "text-white/65 hover:text-white"
+                      ? "text-white"
+                      : "text-white/55 hover:text-white"
                     : active
-                      ? "text-foreground font-medium"
+                      ? "text-foreground"
                       : "text-muted-foreground hover:text-foreground",
                 )}
+                style={{
+                  transitionTimingFunction: "var(--ease-out-quint)",
+                  // Reserve space for medium weight so the underline width doesn't pop on activation.
+                  fontVariationSettings: active ? "'wght' 530" : "'wght' 440",
+                  transition: "color 400ms var(--ease-out-quint), font-variation-settings 400ms var(--ease-out-quint)",
+                }}
               >
                 {t(labelKey)}
               </Link>

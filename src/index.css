@@ -96,6 +96,13 @@
   --chart-4: oklch(0.72 0.10 130);
   --chart-5: oklch(0.50 0.08 280);
 
+  /* Editorial accents (use sparingly) */
+  --accent-warm: oklch(0.72 0.12 55);    /* sandstone amber */
+  --accent-cool: oklch(0.58 0.10 225);   /* harbour blue */
+  --accent-leaf: oklch(0.62 0.10 145);   /* eucalyptus green */
+  --accent-warm-soft: oklch(0.94 0.04 60);
+  --accent-cool-soft: oklch(0.94 0.03 225);
+
   --sidebar: oklch(0.985 0.005 80);
   --sidebar-background: oklch(0.985 0.005 80);
   --sidebar-foreground: oklch(0.18 0.012 60);
