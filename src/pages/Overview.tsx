@@ -15,7 +15,6 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { CardContent } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import { tripInfo, itinerary } from "@/data/trip";
 import {
   getAllAttractions,
@@ -249,13 +248,23 @@ export function Overview() {
           </p>
 
           <div className="grid grid-cols-3 gap-6 md:gap-12 pt-6 border-t border-border" data-reveal>
-            <Stat label={t("overview.statDays")} value={
-              isTripCompleted ? "Done" :
-              isTripInProgress ? "Now" :
-              `${daysUntilDeparture}`
-            } />
-            <Stat label={t("overview.statPlaces")} value={`${placesPlanned}`} />
-            <Stat label={t("overview.statTrip")} value="7" />
+            <Stat
+              tone="cool"
+              label={t("overview.statDays")}
+              value={
+                isTripCompleted
+                  ? "Done"
+                  : isTripInProgress
+                    ? "Now"
+                    : `${daysUntilDeparture}`
+              }
+            />
+            <Stat
+              tone="warm"
+              label={t("overview.statPlaces")}
+              value={`${placesPlanned}`}
+            />
+            <Stat tone="leaf" label={t("overview.statTrip")} value="7" />
           </div>
         </div>
       </section>
@@ -270,16 +279,19 @@ export function Overview() {
         </div>
         <div className="md:col-span-9 grid grid-cols-2 lg:grid-cols-4 gap-px bg-border rounded-2xl overflow-hidden">
           <DossierItem
+            tone="cool"
             icon={Calendar}
             label={t("overview.dates")}
             primary={tripInfo.dates}
           />
           <DossierItem
+            tone="leaf"
             icon={Users}
             label={t("overview.travelers")}
             primary={tripInfo.travelers.join(", ")}
           />
           <DossierItem
+            tone="warm"
             icon={Hotel}
             label={t("overview.hotel")}
             primary={tripInfo.hotel.name}
@@ -287,6 +299,7 @@ export function Overview() {
             secondary={tripInfo.hotel.location}
           />
           <DossierItem
+            tone="cool"
             icon={Plane}
             label={`${t("overview.flights")} · ${tripInfo.flights.outbound.flightNo}`}
             primary={`${tripInfo.flights.outbound.departure} → ${tripInfo.flights.outbound.arrival}`}
@@ -296,68 +309,139 @@ export function Overview() {
       </section>
 
       {/* ── Budget ───────────────────────────────────────── */}
-      <section className="grid gap-10 md:grid-cols-12 md:gap-12">
-        <div className="md:col-span-3 flex flex-col">
-          <span className="bracket-label">{t("overview.budgetLabel")}</span>
-          <h2 className="mt-3 font-heading text-2xl md:text-3xl tracking-tight max-w-[20ch]">
-            {t("overview.budgetSummary")}
-          </h2>
-          <p className="mt-3 text-sm text-muted-foreground max-w-[28ch]">
-            {t("overview.budgetSummaryDesc")}
-          </p>
+      <section>
+        {/* Section header */}
+        <div className="flex items-end justify-between gap-6 mb-6">
+          <div>
+            <span className="bracket-label">{t("overview.budgetLabel")}</span>
+            <h2 className="mt-2 font-heading text-2xl md:text-3xl tracking-tight">
+              {t("overview.budgetSummary")}
+            </h2>
+          </div>
           <Link
             to="/budget"
-            className="mt-6 inline-flex items-center gap-1.5 text-sm font-medium text-foreground no-underline hover:gap-2.5 transition-all w-fit"
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-foreground no-underline hover:gap-2.5 transition-all"
             style={{ transitionTimingFunction: "var(--ease-out-quint)", transitionDuration: "300ms" }}
           >
             {t("overview.seeAll")} <ArrowUpRight className="h-3.5 w-3.5" />
           </Link>
         </div>
 
-        <div className="md:col-span-9 space-y-6">
-          <div className="flex items-end justify-between border-b border-border pb-6">
+        {/* KPI block */}
+        <div className="rounded-3xl border border-border bg-card p-6 sm:p-8 md:p-10">
+          <div className="flex flex-wrap items-end justify-between gap-6 pb-6 border-b border-border">
             <div>
               <p className="eyebrow">{t("overview.remaining")}</p>
-              <p className={cn(
-                "font-stat text-5xl md:text-6xl mt-2 font-numeric",
-                remaining < 0 ? "text-destructive" : "text-foreground"
-              )}>
+              <p
+                className={cn(
+                  "font-stat text-[clamp(40px,6vw,72px)] mt-2",
+                  remaining < 0 ? "text-destructive" : "text-foreground",
+                )}
+              >
                 {formatTWD(remaining)}
               </p>
             </div>
-            <div className="text-right text-xs text-muted-foreground space-y-1">
-              <div>{t("overview.spent")} {formatTWD(totalSpent)}</div>
-              <div>{t("budget.totalBudget")} {formatTWD(totalBudget)}</div>
+            <div className="flex items-baseline gap-6 text-right">
+              <div>
+                <p className="eyebrow">{t("overview.spent")}</p>
+                <p className="font-stat text-xl mt-1.5">{formatTWD(totalSpent)}</p>
+              </div>
+              <div>
+                <p className="eyebrow">{t("budget.totalBudget")}</p>
+                <p className="font-stat text-xl mt-1.5">{formatTWD(totalBudget)}</p>
+              </div>
             </div>
           </div>
-          <Progress
-            value={totalBudget > 0 ? Math.min((totalSpent / totalBudget) * 100, 100) : 0}
-            className="h-1.5"
-          />
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-8 gap-y-5 pt-2" data-reveal>
-            {budgets.map((b) => {
-              const spent = getSpentByCategory(b.category);
-              const pct = b.budgetTWD > 0 ? Math.min((spent / b.budgetTWD) * 100, 100) : 0;
-              const catRemaining = b.budgetTWD - spent;
-              return (
-                <div key={b.category} className="space-y-1.5">
-                  <div className="flex items-baseline justify-between">
-                    <span className="text-[13px] font-medium">{b.category}</span>
-                    <span className={cn(
-                      "text-[11px] font-numeric",
-                      catRemaining < 0 ? "text-destructive" : "text-muted-foreground"
-                    )}>
-                      {formatTWD(catRemaining)}
-                    </span>
-                  </div>
-                  <Progress
-                    value={pct}
-                    className="h-[3px]"
-                    style={{ "--progress-color": pct > 90 ? "var(--destructive)" : CATEGORY_COLORS[b.category] } as React.CSSProperties}
-                  />
-                </div>
-              );
-            })}
+
+          {/* Big progress bar with % marker */}
+          <div className="pt-6 pb-2 space-y-2">
+            <div className="relative h-2 w-full overflow-hidden rounded-full bg-secondary">
+              <div
+                className={cn(
+                  "absolute inset-y-0 left-0 rounded-full",
+                  remaining < 0 ? "bg-destructive" : "bg-foreground",
+                )}
+                style={{
+                  width: `${totalBudget > 0 ? Math.min((totalSpent / totalBudget) * 100, 100) : 0}%`,
+                  transition: "width 800ms var(--ease-out-quint)",
+                }}
+              />
+            </div>
+            <div className="flex justify-between text-[11px] font-numeric text-muted-foreground">
+              <span>
+                {totalBudget > 0
+                  ? Math.round((totalSpent / totalBudget) * 100)
+                  : 0}
+                % {t("budget.used")}
+              </span>
+              <span>
+                {Math.max(
+                  0,
+                  totalBudget > 0
+                    ? 100 - Math.round((totalSpent / totalBudget) * 100)
+                    : 100,
+                )}
+                % {t("budget.left").toLowerCase()}
+              </span>
+            </div>
+          </div>
+
+          {/* Category rows */}
+          <div className="mt-8">
+            <p className="bracket-label mb-4">{t("budget.categories")}</p>
+            <ul className="divide-y divide-border" data-reveal>
+              {budgets.map((b) => {
+                const spent = getSpentByCategory(b.category);
+                const pct =
+                  b.budgetTWD > 0
+                    ? Math.min((spent / b.budgetTWD) * 100, 100)
+                    : 0;
+                const catRemaining = b.budgetTWD - spent;
+                const over = catRemaining < 0;
+                const accent = CATEGORY_COLORS[b.category];
+                return (
+                  <li
+                    key={b.category}
+                    className="grid grid-cols-[140px_1fr_auto] sm:grid-cols-[180px_1fr_auto] items-center gap-4 sm:gap-6 py-3.5"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <span
+                        aria-hidden
+                        className="inline-block h-2 w-2 rounded-full flex-shrink-0"
+                        style={{ backgroundColor: accent }}
+                      />
+                      <span className="text-sm font-medium truncate">
+                        {b.category}
+                      </span>
+                    </div>
+                    <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-secondary">
+                      <div
+                        className="absolute inset-y-0 left-0 rounded-full"
+                        style={{
+                          width: `${pct}%`,
+                          backgroundColor: over ? "var(--destructive)" : accent,
+                          transition: "width 800ms var(--ease-out-quint)",
+                        }}
+                      />
+                    </div>
+                    <div className="text-right whitespace-nowrap">
+                      <span className="font-numeric text-sm">
+                        {formatTWD(spent)}
+                      </span>
+                      <span className="font-numeric text-xs text-muted-foreground">
+                        {" "}
+                        / {formatTWD(b.budgetTWD)}
+                      </span>
+                      {over && (
+                        <span className="ml-2 inline-flex items-center rounded-full bg-destructive/10 text-destructive px-1.5 py-0.5 text-[10px] font-medium">
+                          over
+                        </span>
+                      )}
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
           </div>
         </div>
       </section>
@@ -563,10 +647,28 @@ export function Overview() {
 
 // ─── Components ─────────────────────────────────────────────
 
-function Stat({ label, value }: { label: string; value: string }) {
+function Stat({
+  label,
+  value,
+  tone = "ink",
+}: {
+  label: string;
+  value: string;
+  tone?: "ink" | "warm" | "cool" | "leaf";
+}) {
+  const color =
+    tone === "warm"
+      ? "var(--accent-warm)"
+      : tone === "cool"
+        ? "var(--accent-cool)"
+        : tone === "leaf"
+          ? "var(--accent-leaf)"
+          : "var(--foreground)";
   return (
     <div className="space-y-2">
-      <p className="font-stat text-5xl md:text-6xl">{value}</p>
+      <p className="font-stat text-5xl md:text-6xl" style={{ color }}>
+        {value}
+      </p>
       <p className="eyebrow">{label}</p>
     </div>
   );
@@ -578,17 +680,27 @@ function DossierItem({
   primary,
   secondary,
   href,
+  tone = "ink",
 }: {
   icon: typeof Calendar;
   label: string;
   primary: string;
   secondary?: string;
   href?: string;
+  tone?: "ink" | "warm" | "cool" | "leaf";
 }) {
+  const iconColor =
+    tone === "warm"
+      ? "var(--accent-warm)"
+      : tone === "cool"
+        ? "var(--accent-cool)"
+        : tone === "leaf"
+          ? "var(--accent-leaf)"
+          : "var(--muted-foreground)";
   const content = (
     <div className="bg-card p-5 h-full flex flex-col gap-2 hover:bg-accent/40 transition-colors">
       <div className="flex items-center gap-2">
-        <Icon className="h-3.5 w-3.5 text-muted-foreground" strokeWidth={1.75} />
+        <Icon className="h-3.5 w-3.5" strokeWidth={1.75} style={{ color: iconColor }} />
         <span className="eyebrow">{label}</span>
       </div>
       <p className="font-heading text-base md:text-lg leading-tight mt-1">{primary}</p>
