@@ -37,27 +37,40 @@ function formatTWD(amount: number) {
   return `NT$${amount.toLocaleString()}`;
 }
 
-const DEFAULT_HERO = "https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?w=1600&q=80";
+const DEFAULT_HERO =
+  "https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?w=1600&q=80";
 
 export function Overview() {
   const { t } = useTranslation();
   const [attractions, setAttractions] = useState<AttractionRow[]>([]);
   const [places, setPlaces] = useState<PlaceRow[]>([]);
-  const [dayCustomizations, setDayCustomizations] = useState<DayCustomization[]>([]);
+  const [dayCustomizations, setDayCustomizations] = useState<
+    DayCustomization[]
+  >([]);
   const [allSlots, setAllSlots] = useState<ItinerarySlotRow[]>([]);
   const { budgets, getSpentByCategory, totalBudget, totalSpent } = useBudget();
 
   useEffect(() => {
     let cancelled = false;
-    getAllAttractions().then((rows) => { if (!cancelled) setAttractions(rows); });
-    getAllPlaces().then((rows) => { if (!cancelled) setPlaces(rows); });
-    getAllDayCustomizations().catch(() => [] as DayCustomization[]).then((rows) => {
-      if (!cancelled) setDayCustomizations(rows);
+    getAllAttractions().then((rows) => {
+      if (!cancelled) setAttractions(rows);
     });
-    getAllSlots().catch(() => [] as ItinerarySlotRow[]).then((rows) => {
-      if (!cancelled) setAllSlots(rows);
+    getAllPlaces().then((rows) => {
+      if (!cancelled) setPlaces(rows);
     });
-    return () => { cancelled = true; };
+    getAllDayCustomizations()
+      .catch(() => [] as DayCustomization[])
+      .then((rows) => {
+        if (!cancelled) setDayCustomizations(rows);
+      });
+    getAllSlots()
+      .catch(() => [] as ItinerarySlotRow[])
+      .then((rows) => {
+        if (!cancelled) setAllSlots(rows);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const assignedPlaceIds = useMemo(
@@ -66,15 +79,19 @@ export function Overview() {
   );
 
   const sortedPlaces = useMemo(
-    () => [...places].sort((a, b) => {
-      if (a.image_url && !b.image_url) return -1;
-      if (!a.image_url && b.image_url) return 1;
-      return 0;
-    }),
+    () =>
+      [...places].sort((a, b) => {
+        if (a.image_url && !b.image_url) return -1;
+        if (!a.image_url && b.image_url) return 1;
+        return 0;
+      }),
     [places],
   );
 
-  const featuredHighlights = useMemo(() => attractions.slice(0, 3), [attractions]);
+  const featuredHighlights = useMemo(
+    () => attractions.slice(0, 3),
+    [attractions],
+  );
   const remaining = totalBudget - totalSpent;
   const placesPlanned = allSlots.length;
 
@@ -93,7 +110,12 @@ export function Overview() {
         slides.push({ url: a.image_url, label: a.name });
     });
     places.forEach((p) => {
-      if (p.image_url && p.category === "Attraction" && isHighRes(p.image_url) && !slides.some((s) => s.url === p.image_url))
+      if (
+        p.image_url &&
+        p.category === "Attraction" &&
+        isHighRes(p.image_url) &&
+        !slides.some((s) => s.url === p.image_url)
+      )
         slides.push({ url: p.image_url, label: p.name });
     });
     if (slides.length <= 7) return slides;
@@ -116,11 +138,19 @@ export function Overview() {
   useEffect(() => {
     if (heroSlides.length <= 1) return;
     resetHeroTimer();
-    return () => { if (heroTimerRef.current) clearInterval(heroTimerRef.current); };
+    return () => {
+      if (heroTimerRef.current) clearInterval(heroTimerRef.current);
+    };
   }, [heroSlides.length, resetHeroTimer]);
 
-  const heroNext = () => { setHeroIndex((p) => (p + 1) % heroSlides.length); resetHeroTimer(); };
-  const heroPrev = () => { setHeroIndex((p) => (p - 1 + heroSlides.length) % heroSlides.length); resetHeroTimer(); };
+  const heroNext = () => {
+    setHeroIndex((p) => (p + 1) % heroSlides.length);
+    resetHeroTimer();
+  };
+  const heroPrev = () => {
+    setHeroIndex((p) => (p - 1 + heroSlides.length) % heroSlides.length);
+    resetHeroTimer();
+  };
   const currentSlide = heroSlides[heroIndex] || heroSlides[0];
 
   // ── Trip dates ──────────────────────────────────────────
@@ -129,7 +159,7 @@ export function Overview() {
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const daysUntilDeparture = Math.ceil(
-    (departureDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+    (departureDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
   );
   const isTripInProgress = today >= departureDate && today <= returnDate;
   const isTripCompleted = today > returnDate;
@@ -137,24 +167,22 @@ export function Overview() {
   return (
     <div className="space-y-20 pb-0">
       {/* ── Hero (full-bleed) ─────────────────────────────── */}
-      <section className="relative overflow-hidden group/hero animate-fade -mx-4 sm:-mx-6 lg:-mx-12 xl:-mx-16">
+      <section className="relative group/hero animate-fade -mx-4 sm:-mx-6 lg:-mx-12 xl:-mx-16">
         <div className="absolute inset-0">
-          <img
-            key={currentSlide.url}
-            src={currentSlide.url}
-            alt={currentSlide.label}
-            className="h-full w-full object-cover animate-hero-fade"
-          />
+          <div
+            // key={currentSlide.url}
+            // src={currentSlide.url}
+            // alt={currentSlide.label}
+            style={{ backgroundImage: `url(${currentSlide.url})` }}
+            className="absolute inset-0 bg-fixed bg-cover bg-center"
+          ></div>
           <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/30 to-black/20" />
         </div>
 
         {/* Top row: brand + nav arrows */}
-        <div className="relative flex items-center justify-between px-6 md:px-12 lg:px-16 xl:px-20 pt-6 md:pt-10">
-          <span className="bracket-label text-white/80" style={{ color: "rgba(255,255,255,0.8)" }}>
-            {t("overview.badge")}
-          </span>
+        <div className="relative flex items-center justify-end px-6 md:px-12 lg:px-16 xl:px-20 pt-6 md:pt-10">
           {heroSlides.length > 1 && (
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5 pt-3">
               <button
                 type="button"
                 onClick={heroPrev}
@@ -191,8 +219,8 @@ export function Overview() {
                 {isTripCompleted
                   ? t("overview.tripCompleted")
                   : isTripInProgress
-                  ? t("overview.tripInProgress")
-                  : t("overview.viewItinerary")}
+                    ? t("overview.tripInProgress")
+                    : t("overview.viewItinerary")}
                 <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-foreground text-background">
                   <ArrowUpRight className="h-3.5 w-3.5" />
                 </span>
@@ -200,7 +228,10 @@ export function Overview() {
               <div className="hidden sm:block text-white/80 text-xs max-w-xs leading-relaxed">
                 {tripInfo.dates}. {tripInfo.travelers.join(", ")}.
                 {!isTripInProgress && !isTripCompleted && (
-                  <> {daysUntilDeparture} {t("overview.daysToGo")}.</>
+                  <>
+                    {" "}
+                    {daysUntilDeparture} {t("overview.daysToGo")}.
+                  </>
                 )}
               </div>
             </div>
@@ -209,8 +240,10 @@ export function Overview() {
               className="inline-flex items-center gap-1.5 text-white/90 text-xs no-underline hover:text-white transition-colors group/scroll"
             >
               {t("overview.exploreBelow")}
-              <span className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-white/40 transition-transform duration-400 group-hover/scroll:translate-y-0.5"
-                    style={{ transitionTimingFunction: "var(--ease-out-quint)" }}>
+              <span
+                className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-white/40 transition-transform duration-400 group-hover/scroll:translate-y-0.5"
+                style={{ transitionTimingFunction: "var(--ease-out-quint)" }}
+              >
                 <ArrowDown className="h-3 w-3" />
               </span>
             </a>
@@ -223,13 +256,21 @@ export function Overview() {
                 <button
                   key={i}
                   type="button"
-                  onClick={() => { setHeroIndex(i); resetHeroTimer(); }}
+                  onClick={() => {
+                    setHeroIndex(i);
+                    resetHeroTimer();
+                  }}
                   aria-label={`Slide ${i + 1}`}
                   className={cn(
                     "h-[3px] rounded-full transition-all",
-                    i === heroIndex ? "w-7 bg-white" : "w-3 bg-white/40 hover:bg-white/60"
+                    i === heroIndex
+                      ? "w-7 bg-white"
+                      : "w-3 bg-white/40 hover:bg-white/60",
                   )}
-                  style={{ transitionDuration: "500ms", transitionTimingFunction: "var(--ease-out-quint)" }}
+                  style={{
+                    transitionDuration: "500ms",
+                    transitionTimingFunction: "var(--ease-out-quint)",
+                  }}
                 />
               ))}
             </div>
@@ -238,7 +279,10 @@ export function Overview() {
       </section>
 
       {/* ── About + Stats ────────────────────────────────── */}
-      <section id="about" className="grid gap-10 md:grid-cols-12 md:gap-12 animate-in">
+      <section
+        id="about"
+        className="grid gap-10 md:grid-cols-12 md:gap-12 animate-in"
+      >
         <div className="md:col-span-3">
           <span className="bracket-label">{t("overview.aboutLabel")}</span>
         </div>
@@ -247,7 +291,10 @@ export function Overview() {
             {t("overview.aboutText")}
           </p>
 
-          <div className="grid grid-cols-3 gap-6 md:gap-12 pt-6 border-t border-border" data-reveal>
+          <div
+            className="grid grid-cols-3 gap-6 md:gap-12 pt-6 border-t border-border"
+            data-reveal
+          >
             <Stat
               tone="cool"
               label={t("overview.statDays")}
@@ -321,7 +368,10 @@ export function Overview() {
           <Link
             to="/budget"
             className="inline-flex items-center gap-1.5 text-sm font-medium text-foreground no-underline hover:gap-2.5 transition-all"
-            style={{ transitionTimingFunction: "var(--ease-out-quint)", transitionDuration: "300ms" }}
+            style={{
+              transitionTimingFunction: "var(--ease-out-quint)",
+              transitionDuration: "300ms",
+            }}
           >
             {t("overview.seeAll")} <ArrowUpRight className="h-3.5 w-3.5" />
           </Link>
@@ -344,11 +394,15 @@ export function Overview() {
             <div className="flex items-baseline gap-6 text-right">
               <div>
                 <p className="eyebrow">{t("overview.spent")}</p>
-                <p className="font-stat text-xl mt-1.5">{formatTWD(totalSpent)}</p>
+                <p className="font-stat text-xl mt-1.5">
+                  {formatTWD(totalSpent)}
+                </p>
               </div>
               <div>
                 <p className="eyebrow">{t("budget.totalBudget")}</p>
-                <p className="font-stat text-xl mt-1.5">{formatTWD(totalBudget)}</p>
+                <p className="font-stat text-xl mt-1.5">
+                  {formatTWD(totalBudget)}
+                </p>
               </div>
             </div>
           </div>
@@ -451,7 +505,9 @@ export function Overview() {
         <section className="space-y-8">
           <div className="grid gap-10 md:grid-cols-12 md:gap-12">
             <div className="md:col-span-3">
-              <span className="bracket-label">{t("overview.highlightsLabel")}</span>
+              <span className="bracket-label">
+                {t("overview.highlightsLabel")}
+              </span>
             </div>
             <div className="md:col-span-9 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
               <h2 className="font-heading text-3xl md:text-4xl leading-[1.1] tracking-tight max-w-[20ch]">
@@ -464,7 +520,9 @@ export function Overview() {
           </div>
 
           {/* Featured large + grid */}
-          {featuredHighlights[0] && <FeatureImageCard attraction={featuredHighlights[0]} />}
+          {featuredHighlights[0] && (
+            <FeatureImageCard attraction={featuredHighlights[0]} />
+          )}
           {featuredHighlights.length > 1 && (
             <div className="grid gap-4 md:grid-cols-2" data-reveal>
               {featuredHighlights.slice(1, 3).map((a) => (
@@ -480,7 +538,9 @@ export function Overview() {
         <section className="space-y-6">
           <div className="grid gap-10 md:grid-cols-12 md:gap-12">
             <div className="md:col-span-3">
-              <span className="bracket-label">{t("overview.packagesLabel")}</span>
+              <span className="bracket-label">
+                {t("overview.packagesLabel")}
+              </span>
             </div>
             <div className="md:col-span-9 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
               <h2 className="font-heading text-3xl md:text-4xl leading-[1.1] tracking-tight max-w-[24ch]">
@@ -495,12 +555,17 @@ export function Overview() {
           <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory -mx-4 px-4 md:mx-0 md:px-0">
             {itinerary.map((day, i) => {
               const dayNum = i + 1;
-              const custom = dayCustomizations.find((c) => c.day_number === dayNum);
-              const dayPlaces = (allSlots
-                .filter((s) => s.day_number === dayNum)
-                .map((s) => places.find((p) => p.id === s.place_id))
-                .filter(Boolean) as PlaceRow[]
-              ).filter((p, idx, arr) => arr.findIndex((q) => q.id === p.id) === idx);
+              const custom = dayCustomizations.find(
+                (c) => c.day_number === dayNum,
+              );
+              const dayPlaces = (
+                allSlots
+                  .filter((s) => s.day_number === dayNum)
+                  .map((s) => places.find((p) => p.id === s.place_id))
+                  .filter(Boolean) as PlaceRow[]
+              ).filter(
+                (p, idx, arr) => arr.findIndex((q) => q.id === p.id) === idx,
+              );
               return (
                 <Link
                   key={day.dayLabel}
@@ -512,22 +577,24 @@ export function Overview() {
                       src={custom?.image_url || day.image}
                       alt={custom?.title || day.title}
                       className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover/pkg:scale-105"
-                      style={{ transitionTimingFunction: "var(--ease-out-quint)" }}
+                      style={{
+                        transitionTimingFunction: "var(--ease-out-quint)",
+                      }}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/15 to-transparent" />
                     {/* chips top */}
                     <div className="absolute top-4 left-4 flex gap-1.5">
                       <Chip>{day.dayLabel}</Chip>
-                      {dayPlaces.length > 0 && <Chip>{dayPlaces.length} stops</Chip>}
+                      {dayPlaces.length > 0 && (
+                        <Chip>{dayPlaces.length} stops</Chip>
+                      )}
                     </div>
                     {/* title bottom */}
                     <div className="absolute bottom-0 left-0 right-0 p-5 text-white space-y-2">
                       <p className="font-display text-2xl leading-tight">
                         {custom?.title || day.title}
                       </p>
-                      <p className="text-xs text-white/70">
-                        {day.date}
-                      </p>
+                      <p className="text-xs text-white/70">{day.date}</p>
                     </div>
                   </div>
                 </Link>
@@ -556,7 +623,11 @@ export function Overview() {
 
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3" data-reveal>
             {sortedPlaces.slice(0, PLACES_PREVIEW_LIMIT).map((p) => (
-              <PlaceCard key={p.id} place={p} assigned={assignedPlaceIds.has(p.id)} />
+              <PlaceCard
+                key={p.id}
+                place={p}
+                assigned={assignedPlaceIds.has(p.id)}
+              />
             ))}
           </div>
           {sortedPlaces.length > PLACES_PREVIEW_LIMIT && (
@@ -565,7 +636,9 @@ export function Overview() {
                 to="/places"
                 className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm no-underline hover:bg-secondary transition-colors"
               >
-                {t("overview.seeMore")} ({sortedPlaces.length - PLACES_PREVIEW_LIMIT}+) <ArrowRight className="h-3.5 w-3.5" />
+                {t("overview.seeMore")} (
+                {sortedPlaces.length - PLACES_PREVIEW_LIMIT}+){" "}
+                <ArrowRight className="h-3.5 w-3.5" />
               </Link>
             </div>
           )}
@@ -576,14 +649,20 @@ export function Overview() {
       <section className="relative overflow-hidden rounded-3xl">
         <div className="absolute inset-0">
           <img
-            src={heroSlides[Math.min(2, heroSlides.length - 1)]?.url || DEFAULT_HERO}
+            src={
+              heroSlides[Math.min(2, heroSlides.length - 1)]?.url ||
+              DEFAULT_HERO
+            }
             alt=""
             className="h-full w-full object-cover animate-ken-burns"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/40 to-black/70" />
         </div>
         <div className="relative px-6 py-20 md:py-28 flex flex-col items-center text-center text-white">
-          <span className="bracket-label" style={{ color: "rgba(255,255,255,0.7)" }}>
+          <span
+            className="bracket-label"
+            style={{ color: "rgba(255,255,255,0.7)" }}
+          >
             {t("overview.ctaLabel")}
           </span>
           <h2 className="font-display text-3xl sm:text-4xl md:text-5xl mt-4 max-w-[18ch]">
@@ -616,11 +695,46 @@ export function Overview() {
           <div>
             <p className="eyebrow opacity-60">{t("overview.footerNav")}</p>
             <ul className="mt-3 space-y-1.5 text-sm">
-              <li><Link to="/itinerary" className="opacity-90 hover:opacity-100 no-underline">{t("nav.itinerary")}</Link></li>
-              <li><Link to="/places" className="opacity-90 hover:opacity-100 no-underline">{t("nav.places")}</Link></li>
-              <li><Link to="/budget" className="opacity-90 hover:opacity-100 no-underline">{t("nav.budget")}</Link></li>
-              <li><Link to="/checklist" className="opacity-90 hover:opacity-100 no-underline">{t("nav.checklist")}</Link></li>
-              <li><Link to="/info" className="opacity-90 hover:opacity-100 no-underline">{t("nav.info")}</Link></li>
+              <li>
+                <Link
+                  to="/itinerary"
+                  className="opacity-90 hover:opacity-100 no-underline"
+                >
+                  {t("nav.itinerary")}
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/places"
+                  className="opacity-90 hover:opacity-100 no-underline"
+                >
+                  {t("nav.places")}
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/budget"
+                  className="opacity-90 hover:opacity-100 no-underline"
+                >
+                  {t("nav.budget")}
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/checklist"
+                  className="opacity-90 hover:opacity-100 no-underline"
+                >
+                  {t("nav.checklist")}
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/info"
+                  className="opacity-90 hover:opacity-100 no-underline"
+                >
+                  {t("nav.info")}
+                </Link>
+              </li>
             </ul>
           </div>
           <div>
@@ -628,7 +742,10 @@ export function Overview() {
             <ul className="mt-3 space-y-1.5 text-sm">
               <li className="opacity-90">{tripInfo.dates}</li>
               <li className="opacity-90">{tripInfo.travelers.join(", ")}</li>
-              <li className="opacity-90">{tripInfo.flights.outbound.flightNo} · {tripInfo.flights.outbound.airline}</li>
+              <li className="opacity-90">
+                {tripInfo.flights.outbound.flightNo} ·{" "}
+                {tripInfo.flights.outbound.airline}
+              </li>
             </ul>
           </div>
         </div>
@@ -636,8 +753,13 @@ export function Overview() {
           <span>© {new Date().getFullYear()}</span>
           <span>{t("overview.footerMade")}</span>
         </div>
-        <p className="font-display select-none leading-none text-background tracking-tight px-2 pb-2"
-           style={{ fontSize: "clamp(72px, 22vw, 320px)", letterSpacing: "-0.06em" }}>
+        <p
+          className="font-display select-none leading-none text-background tracking-tight px-2 pb-2"
+          style={{
+            fontSize: "clamp(72px, 22vw, 320px)",
+            letterSpacing: "-0.06em",
+          }}
+        >
           SYDNEY
         </p>
       </section>
@@ -700,15 +822,28 @@ function DossierItem({
   const content = (
     <div className="bg-card p-5 h-full flex flex-col gap-2 hover:bg-accent/40 transition-colors">
       <div className="flex items-center gap-2">
-        <Icon className="h-3.5 w-3.5" strokeWidth={1.75} style={{ color: iconColor }} />
+        <Icon
+          className="h-3.5 w-3.5"
+          strokeWidth={1.75}
+          style={{ color: iconColor }}
+        />
         <span className="eyebrow">{label}</span>
       </div>
-      <p className="font-heading text-base md:text-lg leading-tight mt-1">{primary}</p>
-      {secondary && <p className="text-xs text-muted-foreground">{secondary}</p>}
+      <p className="font-heading text-base md:text-lg leading-tight mt-1">
+        {primary}
+      </p>
+      {secondary && (
+        <p className="text-xs text-muted-foreground">{secondary}</p>
+      )}
     </div>
   );
   return href ? (
-    <a href={href} target="_blank" rel="noopener noreferrer" className="block no-underline group">
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="block no-underline group"
+    >
       {content}
     </a>
   ) : (
@@ -737,7 +872,9 @@ function FeatureImageCard({ attraction }: { attraction: AttractionRow }) {
       <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8 text-white">
         <div className="flex items-end justify-between gap-6">
           <div className="max-w-xl space-y-2">
-            <h3 className="font-display text-3xl md:text-4xl leading-tight">{attraction.name}</h3>
+            <h3 className="font-display text-3xl md:text-4xl leading-tight">
+              {attraction.name}
+            </h3>
             {attraction.description && (
               <p className="text-sm text-white/85 line-clamp-2 max-w-md">
                 {attraction.description}
@@ -779,7 +916,9 @@ function ImageCaptionCard({ attraction }: { attraction: AttractionRow }) {
         )}
       </div>
       <div className="absolute bottom-0 left-0 right-0 p-5 text-white space-y-1.5">
-        <h3 className="font-display text-xl md:text-2xl leading-tight">{attraction.name}</h3>
+        <h3 className="font-display text-xl md:text-2xl leading-tight">
+          {attraction.name}
+        </h3>
         {attraction.description && (
           <p className="text-xs text-white/80 line-clamp-2 max-w-md">
             {attraction.description}
@@ -790,7 +929,13 @@ function ImageCaptionCard({ attraction }: { attraction: AttractionRow }) {
   );
 }
 
-function PlaceCard({ place, assigned }: { place: PlaceRow; assigned: boolean }) {
+function PlaceCard({
+  place,
+  assigned,
+}: {
+  place: PlaceRow;
+  assigned: boolean;
+}) {
   return (
     <article className="group/place relative overflow-hidden rounded-2xl border border-border bg-card hover:border-foreground/40 transition-colors">
       {place.image_url ? (
@@ -824,12 +969,22 @@ function PlaceCard({ place, assigned }: { place: PlaceRow; assigned: boolean }) 
           <p className="font-heading text-base leading-tight">{place.name}</p>
           <div className="flex gap-1 flex-shrink-0 mt-1">
             {place.maps_url && (
-              <a href={place.maps_url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">
+              <a
+                href={place.maps_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
                 <MapPin className="h-3.5 w-3.5" />
               </a>
             )}
             {place.website && (
-              <a href={place.website} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">
+              <a
+                href={place.website}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
                 <Globe className="h-3.5 w-3.5" />
               </a>
             )}
@@ -839,7 +994,9 @@ function PlaceCard({ place, assigned }: { place: PlaceRow; assigned: boolean }) 
           <span className="bracket-label">{place.category}</span>
         )}
         {place.notes && (
-          <p className="text-xs text-muted-foreground line-clamp-2 pt-1">{place.notes}</p>
+          <p className="text-xs text-muted-foreground line-clamp-2 pt-1">
+            {place.notes}
+          </p>
         )}
       </CardContent>
     </article>
