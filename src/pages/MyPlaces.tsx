@@ -210,7 +210,7 @@ export function MyPlaces() {
           role="dialog"
         >
           <div
-            className="absolute inset-0 bg-black/30 backdrop-blur-xs"
+            className="absolute inset-0 bg-black/30"
             onClick={() => {
               setDialogOpen(false);
               setEditingId(null);

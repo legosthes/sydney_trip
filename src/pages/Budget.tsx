@@ -213,7 +213,7 @@ export function Budget() {
           role="dialog"
         >
           <div
-            className="absolute inset-0 bg-black/30 backdrop-blur-xs"
+            className="absolute inset-0 bg-black/30"
             onClick={() => {
               setDialogOpen(false);
               setEditingExpenseId(null);
@@ -427,18 +427,23 @@ export function Budget() {
         <div className="mt-8 space-y-2">
           <div className="relative h-2 w-full overflow-hidden rounded-full bg-secondary">
             <div
-              className={cn(
-                "absolute inset-y-0 left-0 rounded-full",
-                spentPct > 90 ? "bg-destructive" : "bg-foreground",
-              )}
+              className="absolute inset-y-0 left-0 rounded-full"
               style={{
                 width: `${Math.min(spentPct, 100)}%`,
                 transition: "width 600ms var(--ease-out-quint)",
+                backgroundColor:
+                  remaining < 0
+                    ? "var(--destructive)"
+                    : spentPct >= 90
+                      ? "var(--accent-warm)"
+                      : "var(--foreground)",
               }}
             />
           </div>
           <div className="flex justify-between text-[11px] text-muted-foreground font-numeric">
-            <span>{formatTWD(totalSpent)} {t("budget.totalSpent").toLowerCase()}</span>
+            <span>
+              {formatTWD(totalSpent)} {t("budget.totalSpent").toLowerCase()}
+            </span>
             <span>
               {formatTWD(totalBudget)} {t("budget.totalBudget").toLowerCase()}
             </span>
@@ -538,10 +543,14 @@ export function Budget() {
                         strokeWidth={1.75}
                       />
                       <span
-                        className={cn(
-                          "font-stat text-3xl sm:text-[36px]",
-                          over && "text-destructive",
-                        )}
+                        className="font-stat text-3xl sm:text-[36px]"
+                        style={{
+                          color: over
+                            ? "var(--destructive)"
+                            : pct >= 90
+                              ? "var(--accent-warm)"
+                              : "var(--foreground)",
+                        }}
                       >
                         {formatTWD(spent)}
                       </span>
@@ -553,7 +562,11 @@ export function Budget() {
                         className="absolute inset-y-0 left-0 rounded-full"
                         style={{
                           width: `${pct}%`,
-                          backgroundColor: pct > 90 ? "var(--destructive)" : accent,
+                          backgroundColor: over
+                            ? "var(--destructive)"
+                            : pct >= 90
+                              ? "var(--accent-warm)"
+                              : accent,
                           transition: "width 600ms var(--ease-out-quint)",
                         }}
                       />
@@ -582,7 +595,7 @@ export function Budget() {
         </div>
       </section>
 
-      {/* ── Expenses as bill cards ──────────────────────── */}
+      {/* ── Expenses as rows ────────────────────────────── */}
       <section
         className="animate-in"
         style={{ animationDelay: "200ms", animationFillMode: "both" }}
@@ -608,38 +621,51 @@ export function Budget() {
             </p>
           </div>
         ) : (
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3" data-reveal>
-            {expenses.map((expense) => {
-              const Icon = categoryIcons[expense.category] || Wallet;
-              const accent = CATEGORY_COLORS[expense.category];
-              return (
-                <article
-                  key={expense.id}
-                  className="group/bill rounded-2xl border border-border bg-card p-5 hover:border-foreground/30 transition-colors"
-                >
-                  <header className="flex items-start justify-between mb-5">
-                    <div className="flex items-center gap-2.5">
-                      <span
-                        aria-hidden
-                        className="inline-flex h-7 w-7 items-center justify-center rounded-lg"
-                        style={{ backgroundColor: `${accent}15` }}
-                      >
-                        <Icon
-                          className="h-3.5 w-3.5"
-                          style={{ color: accent }}
-                          strokeWidth={1.75}
-                        />
-                      </span>
-                      <div className="min-w-0">
-                        <p className="font-medium text-sm truncate max-w-[180px]">
-                          {expense.description || expense.category}
-                        </p>
-                        <p className="text-[10px] text-muted-foreground font-numeric">
-                          {expense.date}
-                        </p>
-                      </div>
+          <div
+            className="rounded-2xl border border-border bg-card overflow-hidden"
+            data-reveal
+          >
+            <ul className="divide-y divide-border">
+              {expenses.map((expense) => {
+                const Icon = categoryIcons[expense.category] || Wallet;
+                const accent = CATEGORY_COLORS[expense.category];
+                return (
+                  <li
+                    key={expense.id}
+                    className="group/expense flex items-center gap-4 px-5 py-4 sm:px-6 hover:bg-secondary/30 transition-colors"
+                  >
+                    <span
+                      aria-hidden
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-lg shrink-0"
+                      style={{ backgroundColor: `${accent}15` }}
+                    >
+                      <Icon
+                        className="h-4 w-4"
+                        style={{ color: accent }}
+                        strokeWidth={1.75}
+                      />
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm truncate">
+                        {expense.description || expense.category}
+                      </p>
+                      <p className="text-xs text-muted-foreground font-numeric mt-0.5">
+                        {expense.date}
+                      </p>
                     </div>
-                    <div className="flex gap-0.5 opacity-0 group-hover/bill:opacity-100 transition-opacity">
+                    <div className="text-right whitespace-nowrap">
+                      <p className="font-semibold text-sm">
+                        {expense.currency === "AUD"
+                          ? `A$${expense.amount}`
+                          : formatTWD(expense.amount)}
+                      </p>
+                      {expense.currency === "AUD" && (
+                        <p className="text-xs text-muted-foreground font-numeric">
+                          ≈ {formatTWD(expense.amountTWD)}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex gap-0.5 shrink-0 opacity-0 group-hover/expense:opacity-100 transition-opacity">
                       <button
                         type="button"
                         className="inline-flex h-6 w-6 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
@@ -660,24 +686,10 @@ export function Budget() {
                         <Trash2 className="h-3 w-3" />
                       </button>
                     </div>
-                  </header>
-
-                  <div className="flex items-baseline justify-between gap-2">
-                    <span className="font-stat text-2xl sm:text-3xl">
-                      {expense.currency === "AUD"
-                        ? `A$${expense.amount}`
-                        : formatTWD(expense.amount)}
-                    </span>
-                    <span className="bracket-label">{expense.category}</span>
-                  </div>
-                  {expense.currency === "AUD" && (
-                    <p className="text-[10px] text-muted-foreground mt-1 font-numeric">
-                      ≈ {formatTWD(expense.amountTWD)}
-                    </p>
-                  )}
-                </article>
-              );
-            })}
+                  </li>
+                );
+              })}
+            </ul>
           </div>
         )}
       </section>

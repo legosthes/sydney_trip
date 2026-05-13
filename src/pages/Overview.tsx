@@ -411,13 +411,16 @@ export function Overview() {
           <div className="pt-6 pb-2 space-y-2">
             <div className="relative h-2 w-full overflow-hidden rounded-full bg-secondary">
               <div
-                className={cn(
-                  "absolute inset-y-0 left-0 rounded-full",
-                  remaining < 0 ? "bg-destructive" : "bg-foreground",
-                )}
+                className="absolute inset-y-0 left-0 rounded-full"
                 style={{
                   width: `${totalBudget > 0 ? Math.min((totalSpent / totalBudget) * 100, 100) : 0}%`,
                   transition: "width 800ms var(--ease-out-quint)",
+                  backgroundColor:
+                    remaining < 0
+                      ? "var(--destructive)"
+                      : (totalSpent / totalBudget) * 100 >= 90
+                        ? "var(--accent-warm)"
+                        : "var(--foreground)",
                 }}
               />
             </div>
