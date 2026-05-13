@@ -403,9 +403,13 @@ export function Itinerary() {
 
   // Places in current day's slots (for photo picker)
   const slotPlacesWithImages = useMemo(() => {
-    return daySlots
+    const places = daySlots
       .map((s) => allPlaces.find((p) => p.id === s.place_id))
       .filter((p): p is PlaceRow => !!p && !!p.image_url);
+    // Deduplicate by image_url — keep only first occurrence of each image
+    return places.filter(
+      (p, idx, arr) => arr.findIndex((q) => q.image_url === p.image_url) === idx
+    );
   }, [daySlots, allPlaces]);
 
   const handleSaveTitle = async () => {
@@ -615,7 +619,7 @@ export function Itinerary() {
         {/* 3-column layout: [Photo+Map | Slots | Unassigned Sidebar] */}
         <div
           className={cn(
-            "grid gap-5",
+            "grid gap-5 transition-[grid-template-columns] duration-300 ease-out-quint",
             sidebarOpen
               ? "lg:grid-cols-[1fr_1.5fr_260px]"
               : "lg:grid-cols-[1fr_1.5fr_40px]",
@@ -790,9 +794,9 @@ export function Itinerary() {
           </div>
 
           {/* Right column: Collapsible Unassigned Places sidebar */}
-          <div className="lg:sticky lg:top-20 lg:self-start">
+          <div className="lg:sticky lg:top-20 lg:self-start overflow-hidden">
             {sidebarOpen ? (
-              <div className="space-y-3">
+              <div className="space-y-3 animate-fade">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <MapPinned className="h-3.5 w-3.5 text-primary" />
@@ -901,12 +905,12 @@ export function Itinerary() {
             role="dialog"
           >
             <div
-              className="absolute inset-0 bg-black/30 backdrop-blur-xs"
+              className="absolute inset-0 bg-black/30 animate-backdrop-fade"
               onClick={() => setPhotoPickerOpen(false)}
               role="presentation"
             />
             <div
-              className="relative z-10 w-full max-w-lg mx-4 rounded-xl bg-popover p-6 shadow-xl ring-1 ring-foreground/10 max-h-[80vh] flex flex-col"
+              className="relative z-10 w-full max-w-lg mx-4 rounded-xl bg-popover p-6 shadow-xl ring-1 ring-foreground/10 max-h-[80vh] flex flex-col animate-modal-enter"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-4">
@@ -927,7 +931,7 @@ export function Itinerary() {
                   type="button"
                   onClick={() => handleSelectPhoto(null)}
                   className={cn(
-                    "w-full flex items-center gap-3 rounded-lg border p-3 text-left transition-colors hover:border-primary/40 hover:bg-secondary",
+                    "w-full flex items-center gap-3 rounded-lg border p-3 text-left transition-all duration-200 hover:border-primary/40 hover:bg-secondary hover:scale-[1.02]",
                     !currentCustom?.image_url
                       ? "border-primary ring-1 ring-primary/30"
                       : "border-border",
@@ -957,7 +961,7 @@ export function Itinerary() {
                     type="button"
                     onClick={() => handleSelectPhoto(place.image_url)}
                     className={cn(
-                      "w-full flex items-center gap-3 rounded-lg border p-3 text-left transition-colors hover:border-primary/40 hover:bg-secondary",
+                      "w-full flex items-center gap-3 rounded-lg border p-3 text-left transition-all duration-200 hover:border-primary/40 hover:bg-secondary hover:scale-[1.02]",
                       currentCustom?.image_url === place.image_url
                         ? "border-primary ring-1 ring-primary/30"
                         : "border-border",
@@ -995,12 +999,12 @@ export function Itinerary() {
             role="dialog"
           >
             <div
-              className="absolute inset-0 bg-black/30 backdrop-blur-xs"
+              className="absolute inset-0 bg-black/30 animate-backdrop-fade"
               onClick={() => setPickerOpen(false)}
               role="presentation"
             />
             <div
-              className="relative z-10 w-full max-w-lg mx-4 rounded-xl bg-popover p-6 shadow-xl ring-1 ring-foreground/10 max-h-[80vh] flex flex-col"
+              className="relative z-10 w-full max-w-lg mx-4 rounded-xl bg-popover p-6 shadow-xl ring-1 ring-foreground/10 max-h-[80vh] flex flex-col animate-modal-enter"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-4">
@@ -1058,10 +1062,10 @@ export function Itinerary() {
                           setPickerOpen(false);
                         }}
                         className={cn(
-                          "w-full flex items-center gap-3 rounded-lg border p-3 text-left transition-colors",
+                          "w-full flex items-center gap-3 rounded-lg border p-3 text-left transition-all duration-200",
                           alreadyInSlot
                             ? "border-border/30 bg-muted/50 opacity-50 cursor-not-allowed"
-                            : "border-border hover:border-primary/40 hover:bg-secondary cursor-pointer",
+                            : "border-border hover:border-primary/40 hover:bg-secondary hover:scale-[1.02] cursor-pointer",
                         )}
                       >
                         {place.image_url ? (
