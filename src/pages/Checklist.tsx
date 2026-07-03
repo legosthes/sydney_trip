@@ -81,7 +81,7 @@ function DraggableChecklistItem({
       <div
         {...listeners}
         {...attributes}
-        className="flex-shrink-0 cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground touch-none opacity-0 group-hover/item:opacity-100 transition-opacity"
+        className="flex-shrink-0 cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground touch-none opacity-0 group-hover/item:opacity-100 pointer-coarse:opacity-100 transition-opacity"
       >
         <GripVertical className="h-4 w-4" />
       </div>
@@ -104,7 +104,7 @@ function DraggableChecklistItem({
       >
         {item.text}
       </span>
-      <div className="flex gap-1 flex-shrink-0 opacity-0 group-hover/item:opacity-100 transition-opacity">
+      <div className="flex gap-1 flex-shrink-0 opacity-0 group-hover/item:opacity-100 pointer-coarse:opacity-100 transition-opacity">
         <button
           type="button"
           className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground hover:text-primary hover:bg-muted transition-colors"
@@ -612,7 +612,7 @@ export function Checklist() {
                     {groupChecked}/{group.items.length}
                   </span>
                   <div className="flex-1" />
-                  <div className="flex gap-0.5 opacity-0 group-hover/grouphead:opacity-100 transition-opacity">
+                  <div className="flex gap-0.5 opacity-0 group-hover/grouphead:opacity-100 pointer-coarse:opacity-100 transition-opacity">
                     <button
                       type="button"
                       className="inline-flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"

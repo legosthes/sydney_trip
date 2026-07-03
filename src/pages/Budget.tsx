@@ -665,7 +665,7 @@ export function Budget() {
                         </p>
                       )}
                     </div>
-                    <div className="flex gap-0.5 shrink-0 opacity-0 group-hover/expense:opacity-100 transition-opacity">
+                    <div className="flex gap-0.5 shrink-0 opacity-0 group-hover/expense:opacity-100 pointer-coarse:opacity-100 transition-opacity">
                       <button
                         type="button"
                         className="inline-flex h-6 w-6 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
