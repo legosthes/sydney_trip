@@ -1,8 +1,27 @@
+import shutil
 import sqlite3
 import os
 from pathlib import Path
 
-DB_PATH = Path(__file__).parent / "sydney_trip.db"
+# Runtime database location. Overridable via the DB_PATH env var so the app can
+# point at a persistent disk in production (e.g. Render mounts one at /data).
+# Locally this defaults to the file next to this module.
+DB_PATH = Path(os.environ.get("DB_PATH", str(Path(__file__).parent / "sydney_trip.db")))
+
+# Snapshot of the trip data baked into the image. On first boot against an empty
+# persistent disk, this is copied to DB_PATH so the deployed app starts with the
+# real data instead of empty seed defaults.
+SEED_DB = Path(__file__).parent / "sydney_trip.seed.db"
+
+
+def _bootstrap_db() -> None:
+    """Seed a fresh DB_PATH from the bundled snapshot, if one is available."""
+    if DB_PATH.exists():
+        return
+    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+    if SEED_DB.exists():
+        shutil.copy2(SEED_DB, DB_PATH)
+        print(f"Seeded database from snapshot {SEED_DB} -> {DB_PATH}")
 
 
 def get_conn() -> sqlite3.Connection:
@@ -14,6 +33,7 @@ def get_conn() -> sqlite3.Connection:
 
 
 def run_migrations():
+    _bootstrap_db()
     conn = get_conn()
     cur = conn.cursor()
 

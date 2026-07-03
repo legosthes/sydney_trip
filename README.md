@@ -58,7 +58,8 @@ sydney_trip/
 │   ├── main.py             # FastAPI app, all API endpoints
 │   ├── database.py         # SQLite schema, migrations, seed data
 │   ├── requirements.txt
-│   └── sydney_trip.db      # auto-created on first run
+│   ├── sydney_trip.db      # auto-created on first run (gitignored from Docker)
+│   └── sydney_trip.seed.db # data snapshot baked into the image, seeds a fresh disk
 ├── src/
 │   ├── pages/              # Overview, Itinerary, MyPlaces, Budget, TravelInfo, Checklist
 │   ├── components/         # Navbar, PageHero, ThemeToggle, Toast, shadcn-ui primitives
@@ -69,6 +70,7 @@ sydney_trip/
 │   └── index.css           # Tokens, typography utilities, motion utilities
 ├── Dockerfile              # Multi-stage build (Node → Python)
 ├── railway.toml            # Railway deployment config
+├── render.yaml             # Render Blueprint (Docker + persistent disk)
 └── vite.config.ts          # Dev proxy to :8001
 ```
 
@@ -165,6 +167,36 @@ Configured for one-click deploy on [Railway](https://railway.app):
 2. Create a Railway project, connect the repo.
 3. Railway builds from the `Dockerfile`. No extra config required.
 4. Generate a public domain under Settings → Networking.
+
+## Deployment (Render)
+
+Configured for one-click deploy on [Render](https://render.com) via `render.yaml` (Blueprint):
+
+1. Push to GitHub.
+2. In Render: **New → Blueprint**, connect the repo. Render reads `render.yaml`
+   and provisions a Docker web service with a 1 GB persistent disk at `/data`.
+3. Deploy. The service listens on Render's injected `$PORT` and health-checks `/api/budgets`.
+
+**How your data gets there.** The app stores SQLite at `DB_PATH` (set to
+`/data/sydney_trip.db` on Render — a persistent disk that survives restarts and
+deploys). A snapshot of the current data is baked into the image as
+`backend/sydney_trip.seed.db`; on the **first** boot against an empty disk, the
+backend copies that snapshot to `DB_PATH`. After that the disk is authoritative
+and the seed is never touched again, so user edits persist.
+
+> A persistent disk requires a paid instance (the `starter` plan in `render.yaml`).
+> The free tier has no disk — data would reset on every deploy.
+
+### Updating the deployed data snapshot
+
+The baked-in snapshot only seeds a *fresh* disk. To ship newer local data as the
+initial state for a brand-new deploy, refresh the snapshot before pushing:
+
+```bash
+cp backend/sydney_trip.db backend/sydney_trip.seed.db
+```
+
+(This does **not** affect an existing deploy — its disk already has its own data.)
 
 ## Tech Stack
 

@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: sydney-trip
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    # Persistent disks require a paid instance (free tier has no disk).
+    plan: starter
+    # Singapore is the closest region to Taiwan; change if you prefer.
+    region: singapore
+    healthCheckPath: /api/budgets
+    autoDeploy: true
+    envVars:
+      # Point the app at the persistent disk so data survives restarts/deploys.
+      - key: DB_PATH
+        value: /data/sydney_trip.db
+    disk:
+      name: sydney-trip-data
+      mountPath: /data
+      sizeGB: 1
