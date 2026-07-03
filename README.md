@@ -69,7 +69,6 @@ sydney_trip/
 │   ├── lib/                # API client, utils
 │   └── index.css           # Tokens, typography utilities, motion utilities
 ├── Dockerfile              # Multi-stage build (Node → Python)
-├── railway.toml            # Railway deployment config
 ├── render.yaml             # Render Blueprint (Docker + persistent disk)
 └── vite.config.ts          # Dev proxy to :8001
 ```
@@ -159,15 +158,6 @@ docker stop sydney-trip && docker rm sydney-trip
 docker build --no-cache -t sydney-trip .
 ```
 
-## Deployment (Railway)
-
-Configured for one-click deploy on [Railway](https://railway.app):
-
-1. Push to GitHub.
-2. Create a Railway project, connect the repo.
-3. Railway builds from the `Dockerfile`. No extra config required.
-4. Generate a public domain under Settings → Networking.
-
 ## Deployment (Render)
 
 Configured for one-click deploy on [Render](https://render.com) via `render.yaml` (Blueprint):
@@ -203,4 +193,4 @@ cp backend/sydney_trip.db backend/sydney_trip.seed.db
 - **Frontend:** React 19, TypeScript, Vite, Tailwind CSS v4, shadcn-ui, dnd-kit, Lucide icons
 - **Backend:** FastAPI, SQLite, Pydantic
 - **Fonts:** Geist (variable, sans-serif)
-- **Deployment:** Docker, Railway
+- **Deployment:** Docker, Render
