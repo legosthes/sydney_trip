@@ -12,6 +12,14 @@ dist
 dist-ssr
 *.local
 
+# Cloudflare — local state and secrets (never commit)
+.wrangler
+.dev.vars
+
+# SQLite WAL artifacts
+*.db-shm
+*.db-wal
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

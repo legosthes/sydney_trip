@@ -315,6 +315,24 @@ const translations = {
   // Theme
   "theme.light": { en: "Light", zh: "淺色" },
   "theme.dark": { en: "Dark", zh: "深色" },
+
+  // Auth
+  "auth.eyebrow": { en: "Family Trip Planner", zh: "家庭旅行規劃" },
+  "auth.title": { en: "Sydney 2026", zh: "雪梨 2026" },
+  "auth.subtitle": {
+    en: "Sign in to plan the adventure.",
+    zh: "登入以規劃這趟旅程。",
+  },
+  "auth.username": { en: "Username", zh: "使用者名稱" },
+  "auth.password": { en: "Password", zh: "密碼" },
+  "auth.remember": { en: "Remember me", zh: "記住我" },
+  "auth.signIn": { en: "Sign In", zh: "登入" },
+  "auth.signingIn": { en: "Signing in…", zh: "登入中…" },
+  "auth.invalid": {
+    en: "Invalid username or password",
+    zh: "使用者名稱或密碼錯誤",
+  },
+  "auth.signOut": { en: "Sign out", zh: "登出" },
 } as const;
 
 export type TranslationKey = keyof typeof translations;

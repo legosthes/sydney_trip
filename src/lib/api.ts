@@ -1,5 +1,37 @@
 const API_BASE = "/api";
 
+// ── Auth API ──
+
+export interface AuthUser {
+  username: string;
+}
+
+/** Returns the logged-in user, or null when not authenticated. */
+export async function authMe(): Promise<AuthUser | null> {
+  const res = await fetch(`${API_BASE}/auth/me`);
+  if (!res.ok) return null;
+  return res.json();
+}
+
+/** Returns the user on success, or null on wrong credentials. */
+export async function authLogin(
+  username: string,
+  password: string,
+  remember: boolean
+): Promise<AuthUser | null> {
+  const res = await fetch(`${API_BASE}/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, password, remember }),
+  });
+  if (!res.ok) return null;
+  return res.json();
+}
+
+export async function authLogout(): Promise<void> {
+  await fetch(`${API_BASE}/auth/logout`, { method: "POST" });
+}
+
 // ── Types ──
 
 export interface BudgetRow {

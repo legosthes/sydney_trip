@@ -68,9 +68,13 @@ sydney_trip/
 │   ├── i18n/               # EN/ZH translation map, LanguageContext
 │   ├── lib/                # API client, utils
 │   └── index.css           # Tokens, typography utilities, motion utilities
-├── Dockerfile              # Multi-stage build (Node → Python)
-├── render.yaml             # Render Blueprint (Docker + persistent disk)
-└── vite.config.ts          # Dev proxy to :8001
+├── worker/
+│   └── index.ts            # Cloudflare Worker (Hono) — production API, ports main.py
+├── migration/
+│   └── d1-import.sql       # Trip data dump for seeding a fresh D1 database
+├── wrangler.jsonc          # Cloudflare config (SPA assets + /api Worker + D1 binding)
+├── Dockerfile              # Multi-stage build (Node → Python) — legacy/self-host
+└── vite.config.ts          # Dev proxy to :8787 (wrangler dev)
 ```
 
 ## API
@@ -158,39 +162,48 @@ docker stop sydney-trip && docker rm sydney-trip
 docker build --no-cache -t sydney-trip .
 ```
 
-## Deployment (Render)
+## Deployment (Cloudflare Workers + D1, free tier)
 
-Configured for one-click deploy on [Render](https://render.com) via `render.yaml` (Blueprint):
+The production backend is a Cloudflare Worker (`worker/index.ts`, Hono) — a
+TypeScript port of the FastAPI app — backed by **D1** (Cloudflare's hosted
+SQLite). The same Worker serves the built SPA from `dist/` (see
+`wrangler.jsonc`: SPA fallback + `/api/*` routed to the Worker). One deploy,
+one URL, $0/month on the free tier, and the data is shared across all devices.
 
-1. Push to GitHub.
-2. In Render: **New → Blueprint**, connect the repo. Render reads `render.yaml`
-   and provisions a Docker web service with a 1 GB persistent disk at `/data`.
-3. Deploy. The service listens on Render's injected `$PORT` and health-checks `/api/budgets`.
-
-**How your data gets there.** The app stores SQLite at `DB_PATH` (set to
-`/data/sydney_trip.db` on Render — a persistent disk that survives restarts and
-deploys). A snapshot of the current data is baked into the image as
-`backend/sydney_trip.seed.db`; on the **first** boot against an empty disk, the
-backend copies that snapshot to `DB_PATH`. After that the disk is authoritative
-and the seed is never touched again, so user edits persist.
-
-> A persistent disk requires a paid instance (the `starter` plan in `render.yaml`).
-> The free tier has no disk — data would reset on every deploy.
-
-### Updating the deployed data snapshot
-
-The baked-in snapshot only seeds a *fresh* disk. To ship newer local data as the
-initial state for a brand-new deploy, refresh the snapshot before pushing:
+### One-time setup
 
 ```bash
-cp backend/sydney_trip.db backend/sydney_trip.seed.db
+npx wrangler login                      # opens browser OAuth
+npx wrangler d1 create sydney-trip-db   # copy database_id into wrangler.jsonc
+npx wrangler d1 execute sydney-trip-db --remote --file=migration/d1-import.sql
 ```
 
-(This does **not** affect an existing deploy — its disk already has its own data.)
+`migration/d1-import.sql` is a dump of the real trip data (regenerate with
+`sqlite3 backend/sydney_trip.db .dump | grep -viE '^(PRAGMA|BEGIN TRANSACTION|COMMIT)'`).
+Only import it into a **fresh** database — it contains CREATE TABLE + INSERTs.
+
+### Deploy
+
+```bash
+npm run deploy    # = npm run build && wrangler deploy
+```
+
+Live at `https://sydney-trip.<your-account>.workers.dev`. Every subsequent
+`npm run deploy` only replaces the code — the D1 data is untouched.
+
+### Local development against the Worker
+
+```bash
+npm run dev:api   # wrangler dev on :8787 (local D1 copy)
+npm run dev       # vite on :5173, proxies /api → :8787
+```
+
+The local D1 database lives under `.wrangler/state` and is completely separate
+from production.
 
 ## Tech Stack
 
 - **Frontend:** React 19, TypeScript, Vite, Tailwind CSS v4, shadcn-ui, dnd-kit, Lucide icons
-- **Backend:** FastAPI, SQLite, Pydantic
+- **Backend:** Cloudflare Workers (Hono, TypeScript) + D1 in production; FastAPI + SQLite for local/self-hosted use
 - **Fonts:** Geist (variable, sans-serif)
-- **Deployment:** Docker, Render
+- **Deployment:** Cloudflare Workers (free tier)

@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import { LanguageProvider } from "@/i18n/LanguageContext";
 import { ToastProvider } from "@/components/Toast";
+import { AuthGate } from "@/components/AuthGate";
 import { Navbar } from "@/components/Navbar";
 import { cn } from "@/lib/utils";
 import { Overview } from "@/pages/Overview";
@@ -44,12 +45,14 @@ export default function App() {
   return (
     <LanguageProvider>
       <ToastProvider>
-        <BrowserRouter>
-          <div className="min-h-screen bg-background">
-            <Navbar />
-            <RouteTransitions />
-          </div>
-        </BrowserRouter>
+        <AuthGate>
+          <BrowserRouter>
+            <div className="min-h-screen bg-background">
+              <Navbar />
+              <RouteTransitions />
+            </div>
+          </BrowserRouter>
+        </AuthGate>
       </ToastProvider>
     </LanguageProvider>
   );
