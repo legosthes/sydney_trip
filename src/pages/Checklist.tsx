@@ -10,6 +10,7 @@ import {
   ClipboardList,
   GripVertical,
   FolderPlus,
+  CornerDownLeft,
 } from "lucide-react";
 import {
   DndContext,
@@ -121,6 +122,60 @@ function DraggableChecklistItem({
         </button>
       </div>
     </div>
+  );
+}
+
+// ── Quick add row (top of each group) ──
+
+function QuickAddRow({
+  placeholder,
+  onAdd,
+}: {
+  placeholder: string;
+  onAdd: (text: string) => Promise<void>;
+}) {
+  const [text, setText] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const submit = async () => {
+    const value = text.trim();
+    if (!value || busy) return;
+    setBusy(true);
+    try {
+      await onAdd(value);
+      setText("");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        submit();
+      }}
+      className="mb-2 flex items-center gap-2 rounded-xl border border-border bg-card px-3 focus-within:border-ring focus-within:ring-1 focus-within:ring-ring transition-colors"
+    >
+      <Plus className="h-4 w-4 shrink-0 text-muted-foreground" />
+      <input
+        type="text"
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        placeholder={placeholder}
+        enterKeyHint="done"
+        className="h-10 w-full bg-transparent text-sm placeholder:text-muted-foreground focus:outline-none"
+      />
+      {text.trim() && (
+        <button
+          type="submit"
+          disabled={busy}
+          className="shrink-0 rounded-lg px-2 py-1 text-xs font-medium text-primary hover:bg-muted transition-colors"
+        >
+          <CornerDownLeft className="h-3.5 w-3.5" />
+        </button>
+      )}
+    </form>
   );
 }
 
@@ -265,6 +320,22 @@ export function Checklist() {
     setItems((prev) => prev.filter((i) => i.id !== id));
     await deleteChecklistItem(id);
     toast(t("toast.itemDeleted"), "deleted");
+  };
+
+  // Quick-add from the input at the top of a group: the new item goes first,
+  // so its sort_order sits below the group's current minimum.
+  const handleQuickAdd = async (category: string, text: string) => {
+    const groupItems = items.filter((i) => i.category === category);
+    const minOrder = groupItems.length
+      ? Math.min(...groupItems.map((i) => i.sort_order))
+      : 1;
+    const created = await insertChecklistItem({
+      text,
+      category,
+      sort_order: minOrder - 1,
+    });
+    setItems((prev) => [created, ...prev]);
+    toast(t("toast.itemAdded"), "created");
   };
 
   // ── Group management ──
@@ -633,6 +704,10 @@ export function Checklist() {
                     )}
                   </div>
                 </header>
+                <QuickAddRow
+                  placeholder={t("checklist.quickAddPlaceholder")}
+                  onAdd={(text) => handleQuickAdd(group.category, text)}
+                />
                 <DroppableGroup category={group.category}>
                   {group.items.length > 0 ? (
                     group.items.map((item, i) => (

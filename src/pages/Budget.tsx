@@ -23,8 +23,8 @@ import { useBudget } from "@/hooks/useBudget";
 import { PageHero } from "@/components/PageHero";
 import { useToast } from "@/components/Toast";
 import { useTranslation } from "@/i18n/LanguageContext";
-import type { BudgetCategory, Currency } from "@/data/budget";
-import { CATEGORY_COLORS } from "@/data/budget";
+import type { BudgetCategory, Currency, ExpenseAccount } from "@/data/budget";
+import { CATEGORY_COLORS, EXPENSE_ACCOUNTS } from "@/data/budget";
 import { cn } from "@/lib/utils";
 
 const categoryIcons: Record<string, LucideIcon> = {
@@ -55,6 +55,7 @@ interface ExpenseFormData {
   amount: string;
   currency: Currency;
   date: string;
+  account: ExpenseAccount;
 }
 
 const emptyForm: ExpenseFormData = {
@@ -63,6 +64,7 @@ const emptyForm: ExpenseFormData = {
   amount: "",
   currency: "AUD",
   date: "2026-07-22",
+  account: "Combined",
 };
 
 export function Budget() {
@@ -102,12 +104,13 @@ export function Budget() {
     totalBudget > 0 ? Math.min((totalSpent / totalBudget) * 100, 100) : 0;
 
   const exportCsv = () => {
-    const header = "Date,Category,Description,Amount,Currency,Amount (TWD)";
+    const header = "Date,Category,Description,Account,Amount,Currency,Amount (TWD)";
     const rows = expenses.map((e) =>
       [
         e.date,
         e.category,
         `"${e.description.replace(/"/g, '""')}"`,
+        e.account,
         e.amount,
         e.currency,
         e.amountTWD,
@@ -137,6 +140,7 @@ export function Budget() {
       amount: expense.amount.toString(),
       currency: expense.currency,
       date: expense.date,
+      account: expense.account,
     });
     setDialogOpen(true);
   };
@@ -266,6 +270,28 @@ export function Budget() {
                   {CATEGORIES.map((c) => (
                     <option key={c} value={c}>
                       {c}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-1.5">
+                <label htmlFor="exp-account" className="text-sm font-medium">
+                  {t("budget.account")}
+                </label>
+                <select
+                  id="exp-account"
+                  value={formData.account}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      account: e.target.value as ExpenseAccount,
+                    })
+                  }
+                  className="flex h-9 w-full rounded-lg border border-input bg-transparent px-3 py-1 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  {EXPENSE_ACCOUNTS.map((a) => (
+                    <option key={a} value={a}>
+                      {a === "Combined" ? t("budget.accountCombined") : a}
                     </option>
                   ))}
                 </select>
@@ -632,60 +658,79 @@ export function Budget() {
                 return (
                   <li
                     key={expense.id}
-                    className="group/expense flex items-center gap-4 px-5 py-4 sm:px-6 hover:bg-secondary/30 transition-colors"
+                    className="group/expense px-5 py-4 sm:px-6 hover:bg-secondary/30 transition-colors"
                   >
-                    <span
-                      aria-hidden
-                      className="inline-flex h-8 w-8 items-center justify-center rounded-lg shrink-0"
-                      style={{ backgroundColor: `${accent}15` }}
-                    >
-                      <Icon
-                        className="h-4 w-4"
-                        style={{ color: accent }}
-                        strokeWidth={1.75}
-                      />
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm truncate">
-                        {expense.description || expense.category}
-                      </p>
-                      <p className="text-xs text-muted-foreground font-numeric mt-0.5">
-                        {expense.date}
-                      </p>
-                    </div>
-                    <div className="text-right whitespace-nowrap">
-                      <p className="font-semibold text-sm">
-                        {expense.currency === "AUD"
-                          ? `A$${expense.amount}`
-                          : formatTWD(expense.amount)}
-                      </p>
-                      {expense.currency === "AUD" && (
-                        <p className="text-xs text-muted-foreground font-numeric">
-                          ≈ {formatTWD(expense.amountTWD)}
+                    <div className="flex items-center gap-4">
+                      <span
+                        aria-hidden
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg shrink-0"
+                        style={{ backgroundColor: `${accent}15` }}
+                      >
+                        <Icon
+                          className="h-4 w-4"
+                          style={{ color: accent }}
+                          strokeWidth={1.75}
+                        />
+                      </span>
+                      <div className="flex-1 min-w-0 sm:flex-none sm:w-44">
+                        <p className="font-medium text-sm truncate">
+                          {expense.category}
                         </p>
-                      )}
+                        <p className="text-xs text-muted-foreground font-numeric mt-0.5 truncate">
+                          {[
+                            expense.date,
+                            expense.account !== "Combined"
+                              ? expense.account
+                              : null,
+                          ]
+                            .filter(Boolean)
+                            .join(" · ")}
+                        </p>
+                      </div>
+                      {/* Description column (own line below on mobile) */}
+                      <p className="hidden sm:block flex-1 min-w-0 truncate text-sm text-muted-foreground">
+                        {expense.description || "—"}
+                      </p>
+                      <div className="text-right whitespace-nowrap">
+                        <p className="font-semibold text-sm">
+                          {expense.currency === "AUD"
+                            ? `A$${expense.amount}`
+                            : formatTWD(expense.amount)}
+                        </p>
+                        {expense.currency === "AUD" && (
+                          <p className="text-xs text-muted-foreground font-numeric">
+                            ≈ {formatTWD(expense.amountTWD)}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex gap-0.5 shrink-0 opacity-0 group-hover/expense:opacity-100 pointer-coarse:opacity-100 transition-opacity">
+                        <button
+                          type="button"
+                          className="inline-flex h-6 w-6 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                          onClick={() => openEditDialog(expense)}
+                          aria-label="Edit expense"
+                        >
+                          <PencilLine className="h-3 w-3" />
+                        </button>
+                        <button
+                          type="button"
+                          className="inline-flex h-6 w-6 items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-muted transition-colors"
+                          onClick={() => {
+                            removeExpense(expense.id);
+                            toast(t("toast.expenseDeleted"), "deleted");
+                          }}
+                          aria-label="Delete expense"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </button>
+                      </div>
                     </div>
-                    <div className="flex gap-0.5 shrink-0 opacity-0 group-hover/expense:opacity-100 pointer-coarse:opacity-100 transition-opacity">
-                      <button
-                        type="button"
-                        className="inline-flex h-6 w-6 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                        onClick={() => openEditDialog(expense)}
-                        aria-label="Edit expense"
-                      >
-                        <PencilLine className="h-3 w-3" />
-                      </button>
-                      <button
-                        type="button"
-                        className="inline-flex h-6 w-6 items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-muted transition-colors"
-                        onClick={() => {
-                          removeExpense(expense.id);
-                          toast(t("toast.expenseDeleted"), "deleted");
-                        }}
-                        aria-label="Delete expense"
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </button>
-                    </div>
+                    {/* Description as its own line on mobile */}
+                    {expense.description && (
+                      <p className="sm:hidden mt-1.5 pl-12 text-sm text-muted-foreground">
+                        {expense.description}
+                      </p>
+                    )}
                   </li>
                 );
               })}

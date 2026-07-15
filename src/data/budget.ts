@@ -66,6 +66,10 @@ export interface BudgetAllocation {
   budgetTWD: number;
 }
 
+export type ExpenseAccount = "Combined" | "Samuel" | "Ruth";
+
+export const EXPENSE_ACCOUNTS: ExpenseAccount[] = ["Combined", "Samuel", "Ruth"];
+
 export interface Expense {
   id: string;
   category: BudgetCategory;
@@ -74,6 +78,7 @@ export interface Expense {
   currency: Currency;
   amountTWD: number;
   date: string;
+  account: ExpenseAccount;
 }
 
 export const defaultBudgets: BudgetAllocation[] = [

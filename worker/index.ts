@@ -111,11 +111,12 @@ interface ExpenseBody {
   currency: string;
   amount_twd: number;
   date: string;
+  account?: string;
 }
 
 app.get("/api/expenses", async (c) => {
   const { results } = await c.env.DB.prepare(
-    "SELECT id, category, description, amount, currency, amount_twd, date FROM expenses ORDER BY date DESC, created_at DESC"
+    "SELECT id, category, description, amount, currency, amount_twd, date, account FROM expenses ORDER BY date DESC, created_at DESC"
   ).all();
   return c.json(results);
 });
@@ -123,23 +124,25 @@ app.get("/api/expenses", async (c) => {
 app.post("/api/expenses", async (c) => {
   const body = await c.req.json<ExpenseBody>();
   const id = crypto.randomUUID();
+  const account = body.account ?? "Combined";
   await c.env.DB.prepare(
-    "INSERT INTO expenses (id, category, description, amount, currency, amount_twd, date) VALUES (?, ?, ?, ?, ?, ?, ?)"
+    "INSERT INTO expenses (id, category, description, amount, currency, amount_twd, date, account) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
   )
-    .bind(id, body.category, body.description, body.amount, body.currency, body.amount_twd, body.date)
+    .bind(id, body.category, body.description, body.amount, body.currency, body.amount_twd, body.date, account)
     .run();
-  return c.json({ id, ...body }, 201);
+  return c.json({ id, ...body, account }, 201);
 });
 
 app.put("/api/expenses/:id", async (c) => {
   const id = c.req.param("id");
   const body = await c.req.json<ExpenseBody>();
+  const account = body.account ?? "Combined";
   await c.env.DB.prepare(
-    "UPDATE expenses SET category=?, description=?, amount=?, currency=?, amount_twd=?, date=? WHERE id=?"
+    "UPDATE expenses SET category=?, description=?, amount=?, currency=?, amount_twd=?, date=?, account=? WHERE id=?"
   )
-    .bind(body.category, body.description, body.amount, body.currency, body.amount_twd, body.date, id)
+    .bind(body.category, body.description, body.amount, body.currency, body.amount_twd, body.date, account, id)
     .run();
-  return c.json({ id, ...body });
+  return c.json({ id, ...body, account });
 });
 
 app.delete("/api/expenses/:id", async (c) => {

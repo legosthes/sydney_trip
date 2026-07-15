@@ -47,6 +47,7 @@ export interface ExpenseRow {
   currency: string;
   amount_twd: number;
   date: string;
+  account: string;
 }
 
 export interface AttractionRow {

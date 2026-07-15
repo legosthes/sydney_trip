@@ -4,6 +4,7 @@ import type {
   BudgetAllocation,
   BudgetCategory,
   Currency,
+  ExpenseAccount,
 } from "@/data/budget";
 import { AUD_TO_TWD_FALLBACK, fetchAudToTwdRate, getRateUpdatedAt, RATE_REFRESH_MS, defaultBudgets } from "@/data/budget";
 import {
@@ -63,6 +64,7 @@ export function useBudget() {
               currency,
               amountTWD,
               date: e.date,
+              account: (e.account as ExpenseAccount) || "Combined",
             };
           })
         );
@@ -107,6 +109,7 @@ export function useBudget() {
       amount: number;
       currency: Currency;
       date: string;
+      account: ExpenseAccount;
     }) => {
       const amountTWD =
         data.currency === "AUD"
@@ -120,6 +123,7 @@ export function useBudget() {
         currency: data.currency,
         amount_twd: amountTWD,
         date: data.date,
+        account: data.account,
       });
 
       const expense: Expense = {
@@ -142,6 +146,7 @@ export function useBudget() {
         amount: number;
         currency: Currency;
         date: string;
+        account: ExpenseAccount;
       }
     ) => {
       const amountTWD =
@@ -156,6 +161,7 @@ export function useBudget() {
         currency: data.currency,
         amount_twd: amountTWD,
         date: data.date,
+        account: data.account,
       });
 
       setExpenses((prev) =>
