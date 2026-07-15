@@ -679,12 +679,10 @@ export function Budget() {
                         <p className="text-xs text-muted-foreground font-numeric mt-0.5 truncate">
                           {[
                             expense.date,
-                            expense.account !== "Combined"
-                              ? expense.account
-                              : null,
-                          ]
-                            .filter(Boolean)
-                            .join(" · ")}
+                            expense.account === "Combined"
+                              ? t("budget.accountCombined")
+                              : expense.account,
+                          ].join(" · ")}
                         </p>
                       </div>
                       {/* Description column (own line below on mobile) */}
